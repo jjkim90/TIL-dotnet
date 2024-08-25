@@ -80,3 +80,122 @@ MyWpfApp/
     </Grid>
 </Window>
 ```
+
+### MainWindow.xaml.cs
+```csharp
+using System.Windows;
+
+namespace MyWpfApp
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+    }
+}
+```
+
+## 간단한 대화형 예제
+
+버튼 클릭 이벤트를 추가한 예제를 만들어보겠습니다.
+
+### MainWindow.xaml 수정
+```xml
+<Window x:Class="MyWpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="My First WPF App" Height="350" Width="500">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock x:Name="messageText" 
+                   Grid.Row="0"
+                   Text="Hello, WPF!" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center"
+                   FontSize="24"/>
+        
+        <Button x:Name="clickButton" 
+                Grid.Row="1"
+                Content="Click Me!" 
+                Width="120" 
+                Height="40"
+                FontSize="16"
+                Click="ClickButton_Click"/>
+        
+        <TextBox x:Name="inputText" 
+                 Grid.Row="2"
+                 Width="200" 
+                 Height="30"
+                 VerticalAlignment="Top"
+                 Margin="0,20,0,0"
+                 FontSize="14"/>
+    </Grid>
+</Window>
+```
+
+### MainWindow.xaml.cs 수정
+```csharp
+using System.Windows;
+
+namespace MyWpfApp
+{
+    public partial class MainWindow : Window
+    {
+        private int clickCount = 0;
+        
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        
+        private void ClickButton_Click(object sender, RoutedEventArgs e)
+        {
+            clickCount++;
+            string userName = string.IsNullOrEmpty(inputText.Text) ? "User" : inputText.Text;
+            messageText.Text = $"Hello, {userName}! Button clicked {clickCount} times.";
+        }
+    }
+}
+```
+
+## Visual Studio에서 WPF 개발
+
+### 유용한 도구 창
+1. **XAML 디자이너**: 시각적 UI 디자인
+2. **속성 창**: 컨트롤 속성 편집
+3. **도구 상자**: 컨트롤 드래그 앤 드롭
+4. **문서 개요**: UI 계층 구조 확인
+
+### 디버깅 팁
+- **Live Visual Tree**: 실행 중 UI 구조 확인
+- **Live Property Explorer**: 실시간 속성 변경
+- **XAML Hot Reload**: 실행 중 XAML 수정 반영
+
+## WPF의 장단점
+
+### 장점
+- 풍부한 UI 표현력
+- 데이터 바인딩의 강력함
+- 스타일과 템플릿으로 일관된 디자인
+- 애니메이션과 멀티미디어 지원
+- 해상도 독립적인 UI
+
+### 단점
+- 학습 곡선이 가파름
+- 초기 로딩 시간이 김
+- 메모리 사용량이 많음
+- Windows 플랫폼 한정
+
+## 핵심 개념 정리
+- **WPF**: Windows Presentation Foundation
+- **XAML**: UI를 정의하는 마크업 언어
+- **코드 비하인드**: XAML과 연결된 C# 코드
+- **벡터 그래픽**: 해상도 독립적인 렌더링
+- **데이터 바인딩**: UI와 데이터의 자동 동기화
