@@ -29,7 +29,7 @@
 - [22. 가비지 컬렉션](CSharp/22-garbage-collection.md)
 
 ### 🖼️ WPF (Windows Presentation Foundation)
-*Coming soon...*
+- [01. WPF 소개와 첫 애플리케이션](WPF/01-wpf-introduction.md)
 
 ### 🌐 Blazor
 *Coming soon...*
