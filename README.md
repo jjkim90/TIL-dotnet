@@ -30,6 +30,7 @@
 
 ### 🖼️ WPF (Windows Presentation Foundation)
 - [01. WPF 소개와 첫 애플리케이션](WPF/01-wpf-introduction.md)
+- [02. XAML 기초](WPF/02-xaml-basics.md)
 
 ### 🌐 Blazor
 *Coming soon...*
