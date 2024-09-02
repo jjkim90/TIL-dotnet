@@ -214,3 +214,146 @@ Grid는 가장 강력하고 유연한 레이아웃 패널입니다.
                Width="100" Height="100" Fill="Red"/>
 </Canvas>
 ```
+
+## UniformGrid
+
+모든 셀이 동일한 크기를 갖는 그리드입니다.
+
+### 기본 사용법
+```xml
+<!-- 자동 행/열 계산 -->
+<UniformGrid>
+    <Button Content="1"/>
+    <Button Content="2"/>
+    <Button Content="3"/>
+    <Button Content="4"/>
+    <Button Content="5"/>
+    <Button Content="6"/>
+</UniformGrid>
+
+<!-- 행과 열 지정 -->
+<UniformGrid Rows="2" Columns="3">
+    <Button Content="A" Background="LightBlue"/>
+    <Button Content="B" Background="LightGreen"/>
+    <Button Content="C" Background="LightYellow"/>
+    <Button Content="D" Background="LightPink"/>
+    <Button Content="E" Background="LightGray"/>
+    <Button Content="F" Background="LightCoral"/>
+</UniformGrid>
+```
+
+## ScrollViewer
+
+스크롤 가능한 영역을 제공합니다.
+
+### 기본 사용법
+```xml
+<ScrollViewer Height="200">
+    <StackPanel>
+        <TextBlock Text="Line 1" Height="50"/>
+        <TextBlock Text="Line 2" Height="50"/>
+        <TextBlock Text="Line 3" Height="50"/>
+        <TextBlock Text="Line 4" Height="50"/>
+        <TextBlock Text="Line 5" Height="50"/>
+    </StackPanel>
+</ScrollViewer>
+```
+
+### ScrollViewer 속성
+```xml
+<ScrollViewer HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Visible"
+              CanContentScroll="True">
+    <Grid Width="500" Height="500">
+        <!-- 큰 콘텐츠 -->
+    </Grid>
+</ScrollViewer>
+```
+
+## 레이아웃 중첩과 최적화
+
+### 복잡한 레이아웃 구성
+```xml
+<Grid>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    
+    <!-- 헤더 -->
+    <Border Grid.Row="0" Background="DarkBlue" Height="50">
+        <TextBlock Text="Application Header" 
+                   Foreground="White" 
+                   FontSize="20"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"/>
+    </Border>
+    
+    <!-- 메인 콘텐츠 -->
+    <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <!-- 사이드바 -->
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Background="LightGray">
+                <Button Content="Menu 1" Margin="5"/>
+                <Button Content="Menu 2" Margin="5"/>
+                <Button Content="Menu 3" Margin="5"/>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- 콘텐츠 영역 -->
+        <DockPanel Grid.Column="1" Margin="10">
+            <TextBlock DockPanel.Dock="Top" 
+                       Text="Content Title" 
+                       FontSize="18" 
+                       Margin="0,0,0,10"/>
+            <ScrollViewer>
+                <WrapPanel>
+                    <!-- 동적 콘텐츠 -->
+                </WrapPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Grid>
+    
+    <!-- 푸터 -->
+    <StatusBar Grid.Row="2" Height="25">
+        <StatusBarItem>
+            <TextBlock Text="Ready"/>
+        </StatusBarItem>
+    </StatusBar>
+</Grid>
+```
+
+### 레이아웃 성능 팁
+1. **가상화 사용**: 많은 아이템을 표시할 때 VirtualizingStackPanel 활용
+2. **고정 크기 지정**: 가능한 경우 Auto보다 고정 크기 사용
+3. **레이아웃 깊이 최소화**: 중첩된 패널 수 줄이기
+4. **적절한 패널 선택**: 용도에 맞는 레이아웃 패널 사용
+
+## ViewBox
+
+콘텐츠를 확대/축소하여 사용 가능한 공간에 맞춥니다.
+
+```xml
+<ViewBox Stretch="Uniform">
+    <Canvas Width="100" Height="100">
+        <Ellipse Width="50" Height="50" Fill="Blue" 
+                 Canvas.Left="25" Canvas.Top="25"/>
+        <Rectangle Width="80" Height="20" Fill="Red" 
+                   Canvas.Left="10" Canvas.Top="70"/>
+    </Canvas>
+</ViewBox>
+```
+
+## 핵심 개념 정리
+- **Grid**: 행과 열로 구성된 유연한 레이아웃
+- **StackPanel**: 단순한 수직/수평 배치
+- **WrapPanel**: 자동 줄바꿈 레이아웃
+- **DockPanel**: 가장자리 도킹 레이아웃
+- **Canvas**: 절대 좌표 기반 레이아웃
+- **레이아웃 프로세스**: Measure → Arrange 단계
