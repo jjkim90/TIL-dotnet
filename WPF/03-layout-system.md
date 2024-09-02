@@ -106,3 +106,111 @@ Grid는 가장 강력하고 유연한 레이아웃 패널입니다.
     <Button Content="Left" HorizontalAlignment="Left"/>
 </StackPanel>
 ```
+
+## WrapPanel
+
+요소들을 줄바꿈하며 배치하는 레이아웃입니다.
+
+### 기본 사용법
+```xml
+<!-- 수평 줄바꿈 (기본값) -->
+<WrapPanel Width="200">
+    <Button Content="Button 1" Width="70"/>
+    <Button Content="Button 2" Width="70"/>
+    <Button Content="Button 3" Width="70"/>
+    <Button Content="Button 4" Width="70"/>
+</WrapPanel>
+
+<!-- 수직 줄바꿈 -->
+<WrapPanel Orientation="Vertical" Height="100">
+    <Button Content="A" Height="30"/>
+    <Button Content="B" Height="30"/>
+    <Button Content="C" Height="30"/>
+    <Button Content="D" Height="30"/>
+</WrapPanel>
+```
+
+### ItemWidth와 ItemHeight
+```xml
+<WrapPanel ItemWidth="100" ItemHeight="30">
+    <!-- 모든 아이템이 동일한 크기 -->
+    <Button Content="Uniform 1"/>
+    <Button Content="Uniform 2"/>
+    <TextBox Text="Uniform 3"/>
+    <CheckBox Content="Uniform 4"/>
+</WrapPanel>
+```
+
+## DockPanel
+
+요소들을 가장자리에 도킹시키는 레이아웃입니다.
+
+### 기본 사용법
+```xml
+<DockPanel LastChildFill="True">
+    <Menu DockPanel.Dock="Top" Height="25">
+        <MenuItem Header="File"/>
+        <MenuItem Header="Edit"/>
+    </Menu>
+    
+    <StatusBar DockPanel.Dock="Bottom" Height="25">
+        <TextBlock Text="Ready"/>
+    </StatusBar>
+    
+    <ToolBar DockPanel.Dock="Left" Width="50">
+        <Button Content="T1"/>
+        <Button Content="T2"/>
+    </ToolBar>
+    
+    <!-- 마지막 자식이 남은 공간 채움 -->
+    <TextBox Text="Main Content Area"/>
+</DockPanel>
+```
+
+### DockPanel 고급 사용
+```xml
+<DockPanel>
+    <!-- 여러 요소를 같은 방향에 도킹 -->
+    <Button DockPanel.Dock="Top" Content="Top 1"/>
+    <Button DockPanel.Dock="Top" Content="Top 2"/>
+    
+    <!-- LastChildFill="False" -->
+    <DockPanel LastChildFill="False">
+        <Button DockPanel.Dock="Left" Content="Left"/>
+        <Button DockPanel.Dock="Right" Content="Right"/>
+        <Button Content="Not Filled"/>
+    </DockPanel>
+</DockPanel>
+```
+
+## Canvas
+
+절대 좌표를 사용하는 레이아웃입니다.
+
+### 기본 사용법
+```xml
+<Canvas>
+    <!-- Left, Top 좌표 지정 -->
+    <Rectangle Canvas.Left="50" Canvas.Top="50" 
+               Width="100" Height="100" Fill="Red"/>
+    
+    <!-- Right, Bottom 좌표 사용 -->
+    <Ellipse Canvas.Right="50" Canvas.Bottom="50"
+             Width="80" Height="80" Fill="Blue"/>
+    
+    <!-- Z-Index로 겹침 순서 제어 -->
+    <Button Canvas.Left="100" Canvas.Top="100" 
+            Canvas.ZIndex="1" Content="Front"/>
+    <Rectangle Canvas.Left="120" Canvas.Top="120" 
+               Canvas.ZIndex="0" Width="60" Height="60" Fill="Green"/>
+</Canvas>
+```
+
+### Canvas 클리핑
+```xml
+<Canvas ClipToBounds="True" Width="200" Height="200" Background="LightGray">
+    <!-- 캔버스 경계를 벗어나는 부분은 잘림 -->
+    <Rectangle Canvas.Left="150" Canvas.Top="150" 
+               Width="100" Height="100" Fill="Red"/>
+</Canvas>
+```
