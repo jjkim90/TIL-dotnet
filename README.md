@@ -33,6 +33,7 @@
 - [02. XAML 기초](WPF/02-xaml-basics.md)
 - [03. 레이아웃 시스템](WPF/03-layout-system.md)
 - [04. 기본 컨트롤](WPF/04-basic-controls.md)
+- [05. 데이터 바인딩 기초](WPF/05-data-binding-basics.md)
 
 ### 🌐 Blazor
 *Coming soon...*
