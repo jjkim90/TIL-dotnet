@@ -141,3 +141,256 @@
     </Style.Triggers>
 </Style>
 ```
+
+### EventTrigger
+```xml
+<Style x:Key="AnimatedButtonStyle" TargetType="Button">
+    <Setter Property="Background" Value="LightBlue"/>
+    
+    <Style.Triggers>
+        <!-- 마우스 진입 시 애니메이션 -->
+        <EventTrigger RoutedEvent="MouseEnter">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="FontSize"
+                                   To="18" Duration="0:0:0.3"/>
+                    <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                  To="DarkBlue" Duration="0:0:0.3"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+        
+        <!-- 마우스 나갈 때 애니메이션 -->
+        <EventTrigger RoutedEvent="MouseLeave">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="FontSize"
+                                   To="14" Duration="0:0:0.3"/>
+                    <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                  To="LightBlue" Duration="0:0:0.3"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Style.Triggers>
+</Style>
+```
+
+## ControlTemplate
+
+### 기본 ControlTemplate
+```xml
+<Style x:Key="CustomButtonStyle" TargetType="Button">
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <!-- 버튼의 시각적 구조 재정의 -->
+                <Border x:Name="border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="5">
+                    <ContentPresenter HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                </Border>
+                
+                <!-- 템플릿 트리거 -->
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="LightGray"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="DarkGray"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+### 원형 버튼 템플릿
+```xml
+<Style x:Key="CircleButtonStyle" TargetType="Button">
+    <Setter Property="Width" Value="50"/>
+    <Setter Property="Height" Value="50"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Grid>
+                    <!-- 원형 배경 -->
+                    <Ellipse x:Name="background"
+                             Fill="{TemplateBinding Background}"
+                             Stroke="{TemplateBinding BorderBrush}"
+                             StrokeThickness="2"/>
+                    
+                    <!-- 내용 -->
+                    <ContentPresenter HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                </Grid>
+                
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="background" Property="Fill" Value="Orange"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="background" Property="Fill" Value="DarkOrange"/>
+                        <Setter TargetName="background" Property="RenderTransform">
+                            <Setter.Value>
+                                <ScaleTransform ScaleX="0.95" ScaleY="0.95" 
+                                              CenterX="25" CenterY="25"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+### CheckBox 커스텀 템플릿
+```xml
+<Style x:Key="SwitchCheckBoxStyle" TargetType="CheckBox">
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="CheckBox">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- 스위치 -->
+                    <Border x:Name="switchBorder"
+                            Grid.Column="0"
+                            Width="40" Height="20"
+                            Background="LightGray"
+                            CornerRadius="10"
+                            Margin="0,0,5,0">
+                        <Canvas>
+                            <Ellipse x:Name="switchButton"
+                                   Width="16" Height="16"
+                                   Fill="White"
+                                   Canvas.Left="2" Canvas.Top="2"/>
+                        </Canvas>
+                    </Border>
+                    
+                    <!-- 내용 -->
+                    <ContentPresenter Grid.Column="1"
+                                    VerticalAlignment="Center"/>
+                </Grid>
+                
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter TargetName="switchBorder" Property="Background" Value="LightGreen"/>
+                        <Setter TargetName="switchButton" Property="Canvas.Left" Value="22"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+## DataTemplate
+
+### 기본 DataTemplate
+```xml
+<!-- ListBox용 DataTemplate -->
+<ListBox ItemsSource="{Binding People}">
+    <ListBox.ItemTemplate>
+        <DataTemplate>
+            <Border BorderBrush="Gray" BorderThickness="1" 
+                    CornerRadius="5" Padding="10" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="{Binding Name}" 
+                             FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding Age, StringFormat='Age: {0}'}" 
+                             FontSize="14" Foreground="Gray"/>
+                    <TextBlock Text="{Binding Email}" 
+                             FontSize="12" Foreground="Blue"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+```
+
+### DataType을 사용한 DataTemplate
+```xml
+<Window.Resources>
+    <!-- Person 타입에 대한 DataTemplate -->
+    <DataTemplate DataType="{x:Type local:Person}">
+        <Border Background="LightBlue" Padding="5" Margin="2">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Name}" Margin="0,0,10,0"/>
+                <TextBlock Text="{Binding Age}" Foreground="Gray"/>
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+    
+    <!-- Product 타입에 대한 DataTemplate -->
+    <DataTemplate DataType="{x:Type local:Product}">
+        <Border Background="LightGreen" Padding="5" Margin="2">
+            <StackPanel>
+                <TextBlock Text="{Binding ProductName}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Price, StringFormat='{}{0:C}'}"/>
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+</Window.Resources>
+
+<!-- 자동으로 적절한 템플릿 선택 -->
+<ContentControl Content="{Binding SelectedItem}"/>
+```
+
+### DataTemplateSelector
+```csharp
+public class PersonDataTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate AdultTemplate { get; set; }
+    public DataTemplate ChildTemplate { get; set; }
+    
+    public override DataTemplate SelectTemplate(object item, DependencyObject container)
+    {
+        if (item is Person person)
+        {
+            return person.Age >= 18 ? AdultTemplate : ChildTemplate;
+        }
+        
+        return base.SelectTemplate(item, container);
+    }
+}
+```
+
+```xml
+<Window.Resources>
+    <!-- 성인용 템플릿 -->
+    <DataTemplate x:Key="AdultTemplate">
+        <Border Background="LightBlue" Padding="5">
+            <TextBlock>
+                <Run Text="{Binding Name}"/>
+                <Run Text="(Adult)" Foreground="Blue"/>
+            </TextBlock>
+        </Border>
+    </DataTemplate>
+    
+    <!-- 미성년자용 템플릿 -->
+    <DataTemplate x:Key="ChildTemplate">
+        <Border Background="LightPink" Padding="5">
+            <TextBlock>
+                <Run Text="{Binding Name}"/>
+                <Run Text="(Child)" Foreground="Red"/>
+            </TextBlock>
+        </Border>
+    </DataTemplate>
+    
+    <!-- DataTemplateSelector -->
+    <local:PersonDataTemplateSelector x:Key="personTemplateSelector"
+                                     AdultTemplate="{StaticResource AdultTemplate}"
+                                     ChildTemplate="{StaticResource ChildTemplate}"/>
+</Window.Resources>
+
+<ListBox ItemsSource="{Binding People}"
+         ItemTemplateSelector="{StaticResource personTemplateSelector}"/>
+```
