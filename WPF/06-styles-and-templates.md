@@ -394,3 +394,215 @@ public class PersonDataTemplateSelector : DataTemplateSelector
 <ListBox ItemsSource="{Binding People}"
          ItemTemplateSelector="{StaticResource personTemplateSelector}"/>
 ```
+
+## ItemsPanel Template
+
+### 기본 ItemsPanelTemplate
+```xml
+<!-- 수평 ListBox -->
+<ListBox ItemsSource="{Binding Items}">
+    <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+    </ListBox.ItemsPanel>
+</ListBox>
+
+<!-- WrapPanel을 사용한 ListBox -->
+<ListBox ItemsSource="{Binding Items}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+    <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal" ItemWidth="100" ItemHeight="100"/>
+        </ItemsPanelTemplate>
+    </ListBox.ItemsPanel>
+</ListBox>
+
+<!-- UniformGrid를 사용한 ItemsControl -->
+<ItemsControl ItemsSource="{Binding Items}">
+    <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+            <UniformGrid Columns="4"/>
+        </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+</ItemsControl>
+```
+
+## 실전 예제: 테마 시스템
+
+### 라이트/다크 테마 스타일
+```xml
+<!-- 라이트 테마 -->
+<ResourceDictionary x:Key="LightTheme">
+    <SolidColorBrush x:Key="BackgroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="Black"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#007ACC"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="LightGray"/>
+    
+    <Style x:Key="ThemedButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
+
+<!-- 다크 테마 -->
+<ResourceDictionary x:Key="DarkTheme">
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#00A0E9"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3C3C3C"/>
+    
+    <!-- 동일한 키의 스타일이지만 다른 색상 -->
+    <Style x:Key="ThemedButtonStyle" TargetType="Button">
+        <!-- 라이트 테마와 동일한 구조, 다른 색상 -->
+    </Style>
+</ResourceDictionary>
+```
+
+### 머티리얼 디자인 스타일 카드
+```xml
+<Style x:Key="MaterialCardStyle" TargetType="Border">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="16"/>
+    <Setter Property="Margin" Value="8"/>
+    <Setter Property="Effect">
+        <Setter.Value>
+            <DropShadowEffect Color="Black" 
+                            Direction="270" 
+                            BlurRadius="10" 
+                            ShadowDepth="2" 
+                            Opacity="0.3"/>
+        </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+        <EventTrigger RoutedEvent="MouseEnter">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Effect.ShadowDepth"
+                                   To="8" Duration="0:0:0.2"/>
+                    <DoubleAnimation Storyboard.TargetProperty="Effect.BlurRadius"
+                                   To="20" Duration="0:0:0.2"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="MouseLeave">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Effect.ShadowDepth"
+                                   To="2" Duration="0:0:0.2"/>
+                    <DoubleAnimation Storyboard.TargetProperty="Effect.BlurRadius"
+                                   To="10" Duration="0:0:0.2"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Style.Triggers>
+</Style>
+```
+
+## 고급 템플릿 기법
+
+### TemplateBinding vs Binding
+```xml
+<ControlTemplate TargetType="Button">
+    <!-- TemplateBinding: 가벼움, OneWay만 지원 -->
+    <Border Background="{TemplateBinding Background}">
+        
+        <!-- Binding with RelativeSource: 더 유연함 -->
+        <TextBlock Text="{Binding RelativeSource={RelativeSource TemplatedParent}, 
+                                 Path=Content, 
+                                 Converter={StaticResource UpperCaseConverter}}"/>
+    </Border>
+</ControlTemplate>
+```
+
+### ContentPresenter vs ContentControl
+```xml
+<ControlTemplate TargetType="Button">
+    <Grid>
+        <!-- ContentPresenter: 가벼움, 템플릿 내에서 사용 -->
+        <ContentPresenter Content="{TemplateBinding Content}"
+                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+        
+        <!-- ContentControl: 더 많은 기능, 독립적 사용 가능 -->
+        <!-- 일반적으로 ControlTemplate 내에서는 ContentPresenter 권장 -->
+    </Grid>
+</ControlTemplate>
+```
+
+### Visual State Manager (VSM)
+```xml
+<Style x:Key="ModernButtonStyle" TargetType="Button">
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Grid x:Name="RootGrid">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal">
+                                <Storyboard>
+                                    <ColorAnimation Storyboard.TargetName="BackgroundBorder"
+                                                  Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                  To="LightGray" Duration="0:0:0.1"/>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="MouseOver">
+                                <Storyboard>
+                                    <ColorAnimation Storyboard.TargetName="BackgroundBorder"
+                                                  Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                  To="DarkGray" Duration="0:0:0.1"/>
+                                </Storyboard>
+                            </VisualState>
+                            <VisualState x:Name="Pressed">
+                                <Storyboard>
+                                    <ColorAnimation Storyboard.TargetName="BackgroundBorder"
+                                                  Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                                  To="Black" Duration="0:0:0.1"/>
+                                </Storyboard>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    
+                    <Border x:Name="BackgroundBorder" 
+                            Background="LightGray"
+                            CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Margin="10,5"/>
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+```
+
+## 핵심 개념 정리
+- **Style**: 컨트롤의 속성을 일괄 설정
+- **Trigger**: 조건에 따른 동적 스타일 변경
+- **ControlTemplate**: 컨트롤의 시각적 구조 재정의
+- **DataTemplate**: 데이터 객체의 시각적 표현 정의
+- **TemplateBinding**: 템플릿 내에서 부모 속성 참조
+- **Visual State Manager**: 상태별 시각적 변화 관리
