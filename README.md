@@ -34,6 +34,8 @@
 - [03. 레이아웃 시스템](WPF/03-layout-system.md)
 - [04. 기본 컨트롤](WPF/04-basic-controls.md)
 - [05. 데이터 바인딩 기초](WPF/05-data-binding-basics.md)
+- [06. 스타일과 템플릿](WPF/06-styles-and-templates.md)
+- [07. 리소스와 테마](WPF/07-resources-and-themes.md)
 
 ### 🌐 Blazor
 *Coming soon...*
