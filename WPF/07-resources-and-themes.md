@@ -413,6 +413,286 @@ public partial class MainWindow : Window
 </Window>
 ```
 
+### MainWindow.xaml.cs
+```csharp
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+        LoadThemes();
+    }
+    
+    private void LoadThemes()
+    {
+        ThemeSelector.ItemsSource = ThemeManager.Instance.AvailableThemes;
+        ThemeSelector.SelectedItem = ThemeManager.Instance.CurrentTheme;
+    }
+    
+    private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ThemeSelector.SelectedItem is string theme)
+        {
+            ThemeManager.Instance.CurrentTheme = theme;
+        }
+    }
+}
+```
+
+## 리소스 패턴과 베스트 프랙티스
+
+### 네이밍 컨벤션
+```xml
+<!-- 색상: Color 접미사 -->
+<Color x:Key="PrimaryColor">#007ACC</Color>
+<Color x:Key="SecondaryColor">#F0F0F0</Color>
+
+<!-- 브러시: Brush 접미사 -->
+<SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
+<LinearGradientBrush x:Key="BackgroundGradientBrush">...</LinearGradientBrush>
+
+<!-- 스타일: Style 접미사 또는 대상 타입 -->
+<Style x:Key="PrimaryButtonStyle" TargetType="Button"/>
+<Style x:Key="HeaderTextBlockStyle" TargetType="TextBlock"/>
+
+<!-- 템플릿: Template 접미사 -->
+<ControlTemplate x:Key="RoundButtonTemplate" TargetType="Button"/>
+<DataTemplate x:Key="PersonItemTemplate"/>
+```
+
+### 리소스 구조화
+```
+Resources/
+├── Colors/
+│   ├── BaseColors.xaml
+│   ├── ThemeColors.xaml
+│   └── SemanticColors.xaml
+├── Brushes/
+│   ├── SolidBrushes.xaml
+│   └── GradientBrushes.xaml
+├── Styles/
+│   ├── ButtonStyles.xaml
+│   ├── TextStyles.xaml
+│   └── ControlStyles.xaml
+├── Templates/
+│   ├── ControlTemplates.xaml
+│   └── DataTemplates.xaml
+└── Themes/
+    ├── LightTheme.xaml
+    ├── DarkTheme.xaml
+    └── BlueTheme.xaml
+```
+
+### 리소스 계층화
+```xml
+<!-- BaseColors.xaml - 기본 색상 팔레트 -->
+<ResourceDictionary>
+    <Color x:Key="Blue500">#2196F3</Color>
+    <Color x:Key="Blue700">#1976D2</Color>
+    <Color x:Key="Gray100">#F5F5F5</Color>
+    <Color x:Key="Gray800">#424242</Color>
+</ResourceDictionary>
+
+<!-- SemanticColors.xaml - 의미있는 색상 이름 -->
+<ResourceDictionary>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="BaseColors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <Color x:Key="PrimaryColor">{StaticResource Blue500}</Color>
+    <Color x:Key="PrimaryDarkColor">{StaticResource Blue700}</Color>
+    <Color x:Key="BackgroundLightColor">{StaticResource Gray100}</Color>
+    <Color x:Key="TextDarkColor">{StaticResource Gray800}</Color>
+</ResourceDictionary>
+```
+
+## 고급 리소스 기법
+
+### 리소스 프록시
+```csharp
+// 바인딩 가능한 리소스 프록시
+public class BindingProxy : Freezable
+{
+    protected override Freezable CreateInstanceCore()
+    {
+        return new BindingProxy();
+    }
+    
+    public object Data
+    {
+        get { return GetValue(DataProperty); }
+        set { SetValue(DataProperty, value); }
+    }
+    
+    public static readonly DependencyProperty DataProperty =
+        DependencyProperty.Register("Data", typeof(object), 
+            typeof(BindingProxy), new UIPropertyMetadata(null));
+}
+```
+
+```xml
+<!-- DataGrid에서 DataContext 접근 -->
+<DataGrid>
+    <DataGrid.Resources>
+        <local:BindingProxy x:Key="Proxy" Data="{Binding}"/>
+    </DataGrid.Resources>
+    <DataGrid.Columns>
+        <DataGridTextColumn 
+            Visibility="{Binding Data.ShowColumn, 
+                        Source={StaticResource Proxy},
+                        Converter={StaticResource BoolToVisibilityConverter}}"/>
+    </DataGrid.Columns>
+</DataGrid>
+```
+
+### 동적 리소스 생성
+```csharp
+public static class ResourceHelper
+{
+    public static void CreateDynamicResources(FrameworkElement element, 
+                                             Dictionary<string, object> resources)
+    {
+        foreach (var kvp in resources)
+        {
+            element.Resources[kvp.Key] = kvp.Value;
+        }
+    }
+    
+    public static T FindResource<T>(FrameworkElement element, string key)
+    {
+        object resource = element.TryFindResource(key);
+        if (resource is T typedResource)
+        {
+            return typedResource;
+        }
+        
+        return default(T);
+    }
+    
+    public static void UpdateResource(FrameworkElement element, 
+                                    string key, object newValue)
+    {
+        if (element.Resources.Contains(key))
+        {
+            element.Resources[key] = newValue;
+        }
+        else
+        {
+            var app = Application.Current;
+            if (app.Resources.Contains(key))
+            {
+                app.Resources[key] = newValue;
+            }
+        }
+    }
+}
+```
+
+### 리소스 변환기
+```csharp
+public class ThemeResourceConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, 
+                         object parameter, CultureInfo culture)
+    {
+        if (parameter is string resourceKey)
+        {
+            var app = Application.Current;
+            return app.TryFindResource(resourceKey);
+        }
+        
+        return null;
+    }
+    
+    public object ConvertBack(object value, Type targetType, 
+                            object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+```
+
+## 성능 고려사항
+
+### 리소스 로딩 최적화
+```csharp
+public class LazyResourceDictionary : ResourceDictionary
+{
+    private Uri _source;
+    private bool _isLoaded;
+    
+    public new Uri Source
+    {
+        get => _source;
+        set
+        {
+            _source = value;
+            // 실제 사용 시점까지 로딩 지연
+        }
+    }
+    
+    private void EnsureLoaded()
+    {
+        if (!_isLoaded && _source != null)
+        {
+            base.Source = _source;
+            _isLoaded = true;
+        }
+    }
+    
+    public new object this[object key]
+    {
+        get
+        {
+            EnsureLoaded();
+            return base[key];
+        }
+        set
+        {
+            EnsureLoaded();
+            base[key] = value;
+        }
+    }
+}
+```
+
+### 리소스 캐싱
+```csharp
+public class ResourceCache
+{
+    private static readonly Dictionary<string, WeakReference> _cache = 
+        new Dictionary<string, WeakReference>();
+    
+    public static object GetCachedResource(string key)
+    {
+        if (_cache.TryGetValue(key, out var weakRef) && 
+            weakRef.IsAlive)
+        {
+            return weakRef.Target;
+        }
+        
+        return null;
+    }
+    
+    public static void CacheResource(string key, object resource)
+    {
+        _cache[key] = new WeakReference(resource);
+    }
+    
+    public static void ClearCache()
+    {
+        var deadKeys = _cache.Where(kvp => !kvp.Value.IsAlive)
+                            .Select(kvp => kvp.Key)
+                            .ToList();
+        
+        foreach (var key in deadKeys)
+        {
+            _cache.Remove(key);
+        }
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **리소스**: 재사용 가능한 객체 정의
 - **StaticResource**: 컴파일 타임 바인딩, 성능 우선
@@ -420,3 +700,4 @@ public partial class MainWindow : Window
 - **ResourceDictionary**: 리소스 컬렉션 관리
 - **MergedDictionaries**: 여러 리소스 딕셔너리 통합
 - **테마 시스템**: 동적 리소스 교체로 구현
+- **리소스 최적화**: 지연 로딩, 캐싱, 공유 설정
