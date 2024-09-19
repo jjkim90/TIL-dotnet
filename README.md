@@ -36,6 +36,7 @@
 - [05. 데이터 바인딩 기초](WPF/05-data-binding-basics.md)
 - [06. 스타일과 템플릿](WPF/06-styles-and-templates.md)
 - [07. 리소스와 테마](WPF/07-resources-and-themes.md)
+- [08. 커맨드 패턴](WPF/08-command-pattern.md)
 
 ### 🌐 Blazor
 *Coming soon...*
