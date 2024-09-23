@@ -37,6 +37,7 @@
 - [06. 스타일과 템플릿](WPF/06-styles-and-templates.md)
 - [07. 리소스와 테마](WPF/07-resources-and-themes.md)
 - [08. 커맨드 패턴](WPF/08-command-pattern.md)
+- [09. MVVM 패턴](WPF/09-mvvm-pattern.md)
 
 ### 🌐 Blazor
 *Coming soon...*
