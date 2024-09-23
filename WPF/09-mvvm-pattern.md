@@ -1175,6 +1175,294 @@ public class PersonViewModelTests
 }
 ```
 
+## MVVM 베스트 프랙티스
+
+### ViewModel 설계 원칙
+1. **UI 독립성**: ViewModel은 View에 대한 참조를 가지지 않음
+2. **테스트 가능성**: 모든 로직은 테스트 가능하게 작성
+3. **단일 책임**: 각 ViewModel은 하나의 View를 담당
+4. **재사용성**: 공통 기능은 기본 클래스나 서비스로 추출
+
+### 폴더 구조
+```
+ProjectName/
+├── Models/
+│   ├── Person.cs
+│   └── Address.cs
+├── ViewModels/
+│   ├── Base/
+│   │   ├── ViewModelBase.cs
+│   │   └── RelayCommand.cs
+│   ├── MainViewModel.cs
+│   ├── PersonListViewModel.cs
+│   └── PersonDetailsViewModel.cs
+├── Views/
+│   ├── MainWindow.xaml
+│   ├── PersonListView.xaml
+│   └── PersonDetailsView.xaml
+├── Services/
+│   ├── IDataService.cs
+│   ├── DataService.cs
+│   └── DialogService.cs
+└── Converters/
+    ├── BooleanToVisibilityConverter.cs
+    └── InverseBooleanConverter.cs
+```
+
+### 일반적인 실수와 해결책
+```csharp
+// ❌ 잘못된 예: View에 대한 직접 참조
+public class BadViewModel
+{
+    private MainWindow _window;
+    
+    public void ShowMessage()
+    {
+        _window.statusLabel.Text = "Hello"; // View 직접 조작
+    }
+}
+
+// ✅ 올바른 예: 데이터 바인딩 사용
+public class GoodViewModel : ViewModelBase
+{
+    private string _statusMessage;
+    
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => SetProperty(ref _statusMessage, value);
+    }
+    
+    public void ShowMessage()
+    {
+        StatusMessage = "Hello"; // 속성 변경으로 View 업데이트
+    }
+}
+```
+
+### 메모리 누수 방지
+```csharp
+public class LeakSafeViewModel : ViewModelBase, IDisposable
+{
+    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    
+    public LeakSafeViewModel()
+    {
+        // 이벤트 구독 시 약한 참조 사용
+        WeakEventManager<DataService, EventArgs>
+            .AddHandler(DataService.Instance, "DataChanged", OnDataChanged);
+        
+        // 또는 Disposable로 관리
+        Messenger.Default.Register<UpdateMessage>(this, OnUpdateMessage);
+        _disposables.Add(Disposable.Create(() => 
+            Messenger.Default.Unregister<UpdateMessage>(this)));
+    }
+    
+    private void OnDataChanged(object sender, EventArgs e)
+    {
+        // Handle event
+    }
+    
+    private void OnUpdateMessage(UpdateMessage message)
+    {
+        // Handle message
+    }
+    
+    public void Dispose()
+    {
+        _disposables.Dispose();
+    }
+}
+```
+
+### 비동기 작업 패턴
+```csharp
+public class AsyncViewModel : ViewModelBase
+{
+    private readonly SemaphoreSlim _loadingSemaphore = new SemaphoreSlim(1, 1);
+    private CancellationTokenSource _loadingCts;
+    
+    public async Task LoadDataAsync()
+    {
+        await _loadingSemaphore.WaitAsync();
+        
+        try
+        {
+            // 이전 작업 취소
+            _loadingCts?.Cancel();
+            _loadingCts = new CancellationTokenSource();
+            
+            IsLoading = true;
+            ErrorMessage = null;
+            
+            try
+            {
+                var data = await DataService.LoadAsync(_loadingCts.Token);
+                UpdateUI(data);
+            }
+            catch (OperationCanceledException)
+            {
+                // 작업이 취소됨
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+                Logger.LogError(ex);
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            _loadingSemaphore.Release();
+        }
+    }
+}
+```
+
+## 인기 MVVM 프레임워크
+
+### 1. **Prism**
+```csharp
+// Module 정의
+public class PersonModule : IModule
+{
+    public void OnInitialized(IContainerProvider containerProvider)
+    {
+        var regionManager = containerProvider.Resolve<IRegionManager>();
+        regionManager.RegisterViewWithRegion("MainRegion", typeof(PersonListView));
+    }
+    
+    public void RegisterTypes(IContainerRegistry containerRegistry)
+    {
+        containerRegistry.RegisterForNavigation<PersonDetailsView>();
+        containerRegistry.RegisterSingleton<IDataService, DataService>();
+    }
+}
+```
+
+### 2. **MVVM Light**
+```csharp
+public class MainViewModel : ViewModelBase
+{
+    public RelayCommand<Person> SelectPersonCommand { get; }
+    
+    public MainViewModel()
+    {
+        SelectPersonCommand = new RelayCommand<Person>(
+            person => MessengerInstance.Send(new PersonSelectedMessage(person)));
+    }
+}
+```
+
+### 3. **Caliburn.Micro**
+```csharp
+public class ShellViewModel : Screen
+{
+    public void SayHello(string name)
+    {
+        // Convention-based: 자동으로 버튼 Click과 연결
+        MessageBox.Show($"Hello {name}!");
+    }
+    
+    public bool CanSayHello(string name)
+    {
+        return !string.IsNullOrWhiteSpace(name);
+    }
+}
+```
+
+### 4. **ReactiveUI**
+```csharp
+public class SearchViewModel : ReactiveObject
+{
+    private string _searchText;
+    private readonly ObservableAsPropertyHelper<List<SearchResult>> _searchResults;
+    
+    public SearchViewModel()
+    {
+        // Reactive Extensions 사용
+        _searchResults = this
+            .WhenAnyValue(x => x.SearchText)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .SelectMany(SearchAsync)
+            .ObserveOnDispatcher()
+            .ToProperty(this, x => x.SearchResults);
+    }
+    
+    public string SearchText
+    {
+        get => _searchText;
+        set => this.RaiseAndSetIfChanged(ref _searchText, value);
+    }
+    
+    public List<SearchResult> SearchResults => _searchResults.Value;
+}
+```
+
+## 고급 MVVM 패턴
+
+### ViewModel 첫 번째 Navigation
+```csharp
+public interface IViewModelResolver
+{
+    Type ResolveViewType(Type viewModelType);
+    object ResolveView(Type viewModelType);
+}
+
+public class ViewModelFirstNavigationService : INavigationService
+{
+    private readonly IViewModelResolver _resolver;
+    private readonly Frame _frame;
+    
+    public async Task NavigateToAsync<TViewModel>(object parameter = null) 
+        where TViewModel : ViewModelBase
+    {
+        var viewType = _resolver.ResolveViewType(typeof(TViewModel));
+        var view = Activator.CreateInstance(viewType) as Page;
+        var viewModel = Activator.CreateInstance<TViewModel>();
+        
+        view.DataContext = viewModel;
+        
+        if (viewModel is INavigationAware navigationAware)
+        {
+            await navigationAware.OnNavigatedToAsync(parameter);
+        }
+        
+        _frame.Navigate(view);
+    }
+}
+```
+
+### 복합 ViewModel
+```csharp
+public class CompositeViewModel : ViewModelBase
+{
+    public HeaderViewModel Header { get; }
+    public NavigationViewModel Navigation { get; }
+    public ContentViewModel Content { get; set; }
+    public StatusBarViewModel StatusBar { get; }
+    
+    public CompositeViewModel(
+        HeaderViewModel header,
+        NavigationViewModel navigation,
+        StatusBarViewModel statusBar)
+    {
+        Header = header;
+        Navigation = navigation;
+        StatusBar = statusBar;
+        
+        // Navigation 변경 시 Content 업데이트
+        Navigation.NavigationRequested += OnNavigationRequested;
+    }
+    
+    private void OnNavigationRequested(object sender, NavigationEventArgs e)
+    {
+        Content = CreateContentViewModel(e.TargetView);
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **Model**: 비즈니스 로직과 데이터 표현
 - **View**: XAML로 작성된 사용자 인터페이스
@@ -1185,3 +1473,4 @@ public class PersonViewModelTests
 - **Messaging**: ViewModel 간 통신
 - **Services**: 의존성 주입을 통한 기능 제공
 - **Testing**: ViewModel의 독립적 테스트
+- **Best Practices**: MVVM 패턴의 올바른 구현 방법
