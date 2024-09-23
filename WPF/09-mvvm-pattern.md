@@ -662,6 +662,519 @@ public class PersonListViewModel : ViewModelBase
 }
 ```
 
+## 서비스와 의존성 주입
+
+### 서비스 인터페이스
+```csharp
+public interface IDataService
+{
+    Task<IEnumerable<Person>> GetPeopleAsync();
+    Task<Person> GetPersonByIdAsync(int id);
+    Task<Person> SavePersonAsync(Person person);
+    Task DeletePersonAsync(int id);
+}
+
+public interface IDialogService
+{
+    bool ShowConfirmation(string message, string title = "Confirm");
+    void ShowError(string message, string title = "Error");
+    void ShowInfo(string message, string title = "Information");
+    string ShowOpenFileDialog(string filter = "All files (*.*)|*.*");
+    string ShowSaveFileDialog(string filter = "All files (*.*)|*.*");
+}
+
+public interface INavigationService
+{
+    void NavigateTo(string viewName, object parameter = null);
+    void GoBack();
+    bool CanGoBack { get; }
+}
+```
+
+### 서비스 구현
+```csharp
+public class DialogService : IDialogService
+{
+    public bool ShowConfirmation(string message, string title = "Confirm")
+    {
+        var result = MessageBox.Show(message, title, 
+                                   MessageBoxButton.YesNo, 
+                                   MessageBoxImage.Question);
+        return result == MessageBoxResult.Yes;
+    }
+    
+    public void ShowError(string message, string title = "Error")
+    {
+        MessageBox.Show(message, title, 
+                       MessageBoxButton.OK, 
+                       MessageBoxImage.Error);
+    }
+    
+    public void ShowInfo(string message, string title = "Information")
+    {
+        MessageBox.Show(message, title, 
+                       MessageBoxButton.OK, 
+                       MessageBoxImage.Information);
+    }
+    
+    public string ShowOpenFileDialog(string filter = "All files (*.*)|*.*")
+    {
+        var dialog = new OpenFileDialog { Filter = filter };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+    
+    public string ShowSaveFileDialog(string filter = "All files (*.*)|*.*")
+    {
+        var dialog = new SaveFileDialog { Filter = filter };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+}
+```
+
+### ViewModel에서 서비스 사용
+```csharp
+public class PersonDetailsViewModel : ViewModelBase
+{
+    private readonly IDataService _dataService;
+    private readonly IDialogService _dialogService;
+    private readonly INavigationService _navigationService;
+    
+    private Person _person;
+    private bool _isLoading;
+    
+    public PersonDetailsViewModel(
+        IDataService dataService,
+        IDialogService dialogService,
+        INavigationService navigationService)
+    {
+        _dataService = dataService;
+        _dialogService = dialogService;
+        _navigationService = navigationService;
+        
+        SaveCommand = new AsyncRelayCommand(SaveAsync);
+        CancelCommand = new RelayCommand(Cancel);
+    }
+    
+    public Person Person
+    {
+        get => _person;
+        set => SetProperty(ref _person, value);
+    }
+    
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
+    }
+    
+    public ICommand SaveCommand { get; }
+    public ICommand CancelCommand { get; }
+    
+    public async Task LoadPersonAsync(int personId)
+    {
+        try
+        {
+            IsLoading = true;
+            Person = await _dataService.GetPersonByIdAsync(personId);
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Failed to load person: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+    
+    private async Task SaveAsync(object parameter)
+    {
+        try
+        {
+            IsLoading = true;
+            await _dataService.SavePersonAsync(Person);
+            _dialogService.ShowInfo("Person saved successfully!");
+            _navigationService.GoBack();
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Failed to save person: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+    
+    private void Cancel(object parameter)
+    {
+        if (_dialogService.ShowConfirmation("Discard changes?"))
+        {
+            _navigationService.GoBack();
+        }
+    }
+}
+```
+
+## 비동기 패턴과 MVVM
+
+### AsyncRelayCommand
+```csharp
+public class AsyncRelayCommand : ICommand
+{
+    private readonly Func<object, Task> _execute;
+    private readonly Predicate<object> _canExecute;
+    private bool _isExecuting;
+    
+    public AsyncRelayCommand(Func<object, Task> execute, Predicate<object> canExecute = null)
+    {
+        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        _canExecute = canExecute;
+    }
+    
+    public event EventHandler CanExecuteChanged
+    {
+        add { CommandManager.RequerySuggested += value; }
+        remove { CommandManager.RequerySuggested -= value; }
+    }
+    
+    public bool CanExecute(object parameter)
+    {
+        return !_isExecuting && (_canExecute?.Invoke(parameter) ?? true);
+    }
+    
+    public async void Execute(object parameter)
+    {
+        if (!CanExecute(parameter))
+            return;
+        
+        _isExecuting = true;
+        RaiseCanExecuteChanged();
+        
+        try
+        {
+            await _execute(parameter);
+        }
+        finally
+        {
+            _isExecuting = false;
+            RaiseCanExecuteChanged();
+        }
+    }
+    
+    public void RaiseCanExecuteChanged()
+    {
+        CommandManager.InvalidateRequerySuggested();
+    }
+}
+```
+
+### 비동기 데이터 로딩
+```csharp
+public class AsyncDataViewModel : ViewModelBase
+{
+    private ObservableCollection<PersonViewModel> _people;
+    private bool _isLoading;
+    private string _loadingMessage;
+    
+    public ObservableCollection<PersonViewModel> People
+    {
+        get => _people;
+        set => SetProperty(ref _people, value);
+    }
+    
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetProperty(ref _isLoading, value);
+    }
+    
+    public string LoadingMessage
+    {
+        get => _loadingMessage;
+        set => SetProperty(ref _loadingMessage, value);
+    }
+    
+    public ICommand LoadDataCommand { get; }
+    public ICommand RefreshCommand { get; }
+    
+    public AsyncDataViewModel()
+    {
+        People = new ObservableCollection<PersonViewModel>();
+        LoadDataCommand = new AsyncRelayCommand(LoadDataAsync);
+        RefreshCommand = new AsyncRelayCommand(RefreshAsync);
+    }
+    
+    private async Task LoadDataAsync(object parameter)
+    {
+        if (IsLoading) return;
+        
+        try
+        {
+            IsLoading = true;
+            LoadingMessage = "Loading people...";
+            
+            var people = await Task.Run(async () =>
+            {
+                // Simulate long-running operation
+                await Task.Delay(2000);
+                return await DataService.GetPeopleAsync();
+            });
+            
+            // Update UI on main thread
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                People.Clear();
+                foreach (var person in people)
+                {
+                    People.Add(new PersonViewModel(person));
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            LoadingMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+    
+    private async Task RefreshAsync(object parameter)
+    {
+        People.Clear();
+        await LoadDataAsync(parameter);
+    }
+}
+```
+
+## MVVM 프레임워크 기능
+
+### Navigation Service 구현
+```csharp
+public class NavigationService : INavigationService
+{
+    private readonly Dictionary<string, Type> _viewTypes = new Dictionary<string, Type>();
+    private readonly Stack<Page> _navigationStack = new Stack<Page>();
+    private Frame _navigationFrame;
+    
+    public void Configure(string key, Type viewType)
+    {
+        _viewTypes[key] = viewType;
+    }
+    
+    public void SetNavigationFrame(Frame frame)
+    {
+        _navigationFrame = frame;
+    }
+    
+    public void NavigateTo(string viewName, object parameter = null)
+    {
+        if (!_viewTypes.ContainsKey(viewName))
+            throw new ArgumentException($"View '{viewName}' not registered");
+        
+        var viewType = _viewTypes[viewName];
+        var view = Activator.CreateInstance(viewType) as Page;
+        
+        if (view?.DataContext is INavigationAware navigationAware)
+        {
+            navigationAware.OnNavigatedTo(parameter);
+        }
+        
+        _navigationStack.Push(view);
+        _navigationFrame.Navigate(view);
+    }
+    
+    public void GoBack()
+    {
+        if (CanGoBack)
+        {
+            var currentView = _navigationStack.Pop();
+            
+            if (currentView?.DataContext is INavigationAware navigationAware)
+            {
+                navigationAware.OnNavigatedFrom();
+            }
+            
+            _navigationFrame.GoBack();
+        }
+    }
+    
+    public bool CanGoBack => _navigationStack.Count > 1;
+}
+
+public interface INavigationAware
+{
+    void OnNavigatedTo(object parameter);
+    void OnNavigatedFrom();
+}
+```
+
+## 실전 예제: 완전한 MVVM 애플리케이션
+
+### App.xaml.cs - 부트스트래핑
+```csharp
+public partial class App : Application
+{
+    private ServiceContainer _container;
+    
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        
+        ConfigureServices();
+        
+        var mainWindow = new MainWindow
+        {
+            DataContext = _container.GetService<MainViewModel>()
+        };
+        
+        mainWindow.Show();
+    }
+    
+    private void ConfigureServices()
+    {
+        _container = new ServiceContainer();
+        
+        // Register services
+        _container.RegisterSingleton<IDataService, DataService>();
+        _container.RegisterSingleton<IDialogService, DialogService>();
+        _container.RegisterSingleton<INavigationService, NavigationService>();
+        
+        // Register ViewModels
+        _container.RegisterTransient<MainViewModel>();
+        _container.RegisterTransient<PersonListViewModel>();
+        _container.RegisterTransient<PersonDetailsViewModel>();
+    }
+}
+```
+
+### MainViewModel - 전체 애플리케이션 조정
+```csharp
+public class MainViewModel : ViewModelBase
+{
+    private readonly INavigationService _navigationService;
+    private ViewModelBase _currentViewModel;
+    
+    public MainViewModel(INavigationService navigationService)
+    {
+        _navigationService = navigationService;
+        
+        // Register views
+        _navigationService.Configure("PersonList", typeof(PersonListView));
+        _navigationService.Configure("PersonDetails", typeof(PersonDetailsView));
+        
+        // Commands
+        ShowPersonListCommand = new RelayCommand(_ => ShowPersonList());
+        ShowSettingsCommand = new RelayCommand(_ => ShowSettings());
+        
+        // Subscribe to navigation events
+        Messenger.Default.Register<NavigationMessage>(OnNavigationRequested);
+        
+        // Show initial view
+        ShowPersonList();
+    }
+    
+    public ViewModelBase CurrentViewModel
+    {
+        get => _currentViewModel;
+        set => SetProperty(ref _currentViewModel, value);
+    }
+    
+    public ICommand ShowPersonListCommand { get; }
+    public ICommand ShowSettingsCommand { get; }
+    
+    private void ShowPersonList()
+    {
+        CurrentViewModel = new PersonListViewModel(_dataService, _dialogService);
+    }
+    
+    private void ShowSettings()
+    {
+        CurrentViewModel = new SettingsViewModel();
+    }
+    
+    private void OnNavigationRequested(NavigationMessage message)
+    {
+        switch (message.ViewName)
+        {
+            case "PersonDetails":
+                CurrentViewModel = new PersonDetailsViewModel(_dataService, _dialogService)
+                {
+                    PersonId = (int)message.Parameter
+                };
+                break;
+        }
+    }
+}
+```
+
+## 테스트와 MVVM
+
+### ViewModel 단위 테스트
+```csharp
+[TestClass]
+public class PersonViewModelTests
+{
+    private Mock<IDataService> _mockDataService;
+    private Mock<IDialogService> _mockDialogService;
+    
+    [TestInitialize]
+    public void Setup()
+    {
+        _mockDataService = new Mock<IDataService>();
+        _mockDialogService = new Mock<IDialogService>();
+    }
+    
+    [TestMethod]
+    public async Task SaveCommand_ValidPerson_SavesSuccessfully()
+    {
+        // Arrange
+        var person = new Person { FirstName = "John", LastName = "Doe" };
+        var viewModel = new PersonDetailsViewModel(
+            _mockDataService.Object,
+            _mockDialogService.Object,
+            null);
+        
+        viewModel.Person = person;
+        
+        _mockDataService
+            .Setup(x => x.SavePersonAsync(It.IsAny<Person>()))
+            .ReturnsAsync(person);
+        
+        // Act
+        await viewModel.SaveCommand.Execute(null);
+        
+        // Assert
+        _mockDataService.Verify(x => x.SavePersonAsync(person), Times.Once);
+        _mockDialogService.Verify(x => x.ShowInfo(It.IsAny<string>()), Times.Once);
+    }
+    
+    [TestMethod]
+    public void FirstName_Changed_RaisesPropertyChanged()
+    {
+        // Arrange
+        var viewModel = new PersonViewModel(new Person());
+        var propertyChangedRaised = false;
+        string changedPropertyName = null;
+        
+        viewModel.PropertyChanged += (sender, e) =>
+        {
+            propertyChangedRaised = true;
+            changedPropertyName = e.PropertyName;
+        };
+        
+        // Act
+        viewModel.FirstName = "NewName";
+        
+        // Assert
+        Assert.IsTrue(propertyChangedRaised);
+        Assert.AreEqual(nameof(PersonViewModel.FirstName), changedPropertyName);
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **Model**: 비즈니스 로직과 데이터 표현
 - **View**: XAML로 작성된 사용자 인터페이스
@@ -670,3 +1183,5 @@ public class PersonListViewModel : ViewModelBase
 - **Commands**: 사용자 상호작용 처리
 - **Validation**: 데이터 유효성 검사
 - **Messaging**: ViewModel 간 통신
+- **Services**: 의존성 주입을 통한 기능 제공
+- **Testing**: ViewModel의 독립적 테스트
