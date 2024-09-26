@@ -550,6 +550,511 @@ public class RangeValidationRule : ValidationRule
 </Style>
 ```
 
+## INotifyDataErrorInfo
+
+INotifyDataErrorInfo는 비동기 검증과 여러 오류를 지원하는 고급 검증 인터페이스입니다.
+
+### INotifyDataErrorInfo 구현
+```csharp
+public class ValidatingViewModel : ViewModelBase, INotifyDataErrorInfo
+{
+    private readonly Dictionary<string, List<string>> _errors = new();
+    private string _email;
+    private int _age;
+    
+    public string Email
+    {
+        get => _email;
+        set
+        {
+            if (SetProperty(ref _email, value))
+            {
+                ValidateEmailAsync();
+            }
+        }
+    }
+    
+    public int Age
+    {
+        get => _age;
+        set
+        {
+            if (SetProperty(ref _age, value))
+            {
+                ValidateAge();
+            }
+        }
+    }
+    
+    // INotifyDataErrorInfo 구현
+    public bool HasErrors => _errors.Count > 0;
+    
+    public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+    
+    public IEnumerable GetErrors(string propertyName)
+    {
+        if (string.IsNullOrEmpty(propertyName))
+            return _errors.SelectMany(kvp => kvp.Value);
+        
+        return _errors.ContainsKey(propertyName) ? _errors[propertyName] : null;
+    }
+    
+    private async void ValidateEmailAsync()
+    {
+        ClearErrors(nameof(Email));
+        
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            AddError(nameof(Email), "Email is required");
+        }
+        else if (!IsValidEmail(Email))
+        {
+            AddError(nameof(Email), "Invalid email format");
+        }
+        else
+        {
+            // 비동기 중복 확인
+            var isDuplicate = await CheckEmailDuplicateAsync(Email);
+            if (isDuplicate)
+            {
+                AddError(nameof(Email), "Email already exists");
+            }
+        }
+    }
+    
+    private void ValidateAge()
+    {
+        ClearErrors(nameof(Age));
+        
+        if (Age < 0)
+        {
+            AddError(nameof(Age), "Age cannot be negative");
+        }
+        else if (Age > 150)
+        {
+            AddError(nameof(Age), "Age cannot exceed 150");
+        }
+    }
+    
+    private void AddError(string propertyName, string error)
+    {
+        if (!_errors.ContainsKey(propertyName))
+            _errors[propertyName] = new List<string>();
+        
+        if (!_errors[propertyName].Contains(error))
+        {
+            _errors[propertyName].Add(error);
+            OnErrorsChanged(propertyName);
+        }
+    }
+    
+    private void ClearErrors(string propertyName)
+    {
+        if (_errors.ContainsKey(propertyName))
+        {
+            _errors.Remove(propertyName);
+            OnErrorsChanged(propertyName);
+        }
+    }
+    
+    private void OnErrorsChanged(string propertyName)
+    {
+        ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+    }
+}
+```
+
+## 동적 바인딩
+
+### BindingExpression 조작
+```csharp
+public partial class DynamicBindingExample : UserControl
+{
+    public DynamicBindingExample()
+    {
+        InitializeComponent();
+    }
+    
+    private void UpdateBinding_Click(object sender, RoutedEventArgs e)
+    {
+        // 기존 바인딩 가져오기
+        var bindingExpression = targetTextBox.GetBindingExpression(TextBox.TextProperty);
+        var oldBinding = bindingExpression?.ParentBinding;
+        
+        // 새 바인딩 생성
+        var newBinding = new Binding
+        {
+            Path = new PropertyPath(pathTextBox.Text),
+            Mode = BindingMode.TwoWay,
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+        };
+        
+        // 바인딩 교체
+        targetTextBox.SetBinding(TextBox.TextProperty, newBinding);
+    }
+    
+    private void RefreshBinding_Click(object sender, RoutedEventArgs e)
+    {
+        // 바인딩 강제 업데이트
+        var bindingExpression = targetTextBox.GetBindingExpression(TextBox.TextProperty);
+        bindingExpression?.UpdateTarget();
+        bindingExpression?.UpdateSource();
+    }
+}
+```
+
+### 프로그래밍 방식으로 바인딩 생성
+```csharp
+public class BindingFactory
+{
+    public static void CreateBinding(FrameworkElement target, 
+                                   DependencyProperty targetProperty,
+                                   object source,
+                                   string sourcePath,
+                                   BindingMode mode = BindingMode.TwoWay)
+    {
+        var binding = new Binding(sourcePath)
+        {
+            Source = source,
+            Mode = mode,
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+        };
+        
+        // Converter 추가
+        if (targetProperty == UIElement.VisibilityProperty && 
+            source.GetType().GetProperty(sourcePath)?.PropertyType == typeof(bool))
+        {
+            binding.Converter = new BooleanToVisibilityConverter();
+        }
+        
+        target.SetBinding(targetProperty, binding);
+    }
+    
+    public static void CreateMultiBinding(FrameworkElement target,
+                                        DependencyProperty targetProperty,
+                                        IMultiValueConverter converter,
+                                        params BindingBase[] bindings)
+    {
+        var multiBinding = new MultiBinding
+        {
+            Converter = converter
+        };
+        
+        foreach (var binding in bindings)
+        {
+            multiBinding.Bindings.Add(binding);
+        }
+        
+        target.SetBinding(targetProperty, multiBinding);
+    }
+}
+```
+
+## 고급 컬렉션 바인딩
+
+### ICollectionView 직접 조작
+```csharp
+public class AdvancedCollectionViewModel : ViewModelBase
+{
+    private readonly ObservableCollection<Person> _people;
+    private ICollectionView _peopleView;
+    private string _filterText;
+    
+    public AdvancedCollectionViewModel()
+    {
+        _people = new ObservableCollection<Person>(DataService.GetPeople());
+        _peopleView = CollectionViewSource.GetDefaultView(_people);
+        
+        // 라이브 정렬 활성화
+        if (_peopleView is ListCollectionView listView)
+        {
+            listView.IsLiveSorting = true;
+            listView.LiveSortingProperties.Add(nameof(Person.LastName));
+        }
+        
+        // 라이브 필터링 활성화
+        _peopleView.Filter = PersonFilter;
+        
+        // 라이브 그룹화
+        _peopleView.GroupDescriptions.Add(
+            new PropertyGroupDescription(nameof(Person.Department)));
+    }
+    
+    public ICollectionView PeopleView => _peopleView;
+    
+    public string FilterText
+    {
+        get => _filterText;
+        set
+        {
+            if (SetProperty(ref _filterText, value))
+            {
+                _peopleView.Refresh();
+            }
+        }
+    }
+    
+    private bool PersonFilter(object obj)
+    {
+        if (string.IsNullOrWhiteSpace(FilterText))
+            return true;
+        
+        if (obj is Person person)
+        {
+            return person.FullName.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ||
+                   person.Department.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        return false;
+    }
+    
+    public void AddSorting(string propertyName, ListSortDirection direction)
+    {
+        _peopleView.SortDescriptions.Add(
+            new SortDescription(propertyName, direction));
+    }
+    
+    public void RemoveSorting(string propertyName)
+    {
+        var sortToRemove = _peopleView.SortDescriptions
+            .FirstOrDefault(sd => sd.PropertyName == propertyName);
+        
+        if (sortToRemove != null)
+        {
+            _peopleView.SortDescriptions.Remove(sortToRemove);
+        }
+    }
+}
+```
+
+### 가상화된 컬렉션
+```csharp
+public class VirtualizingCollection<T> : IList<T>, INotifyCollectionChanged
+{
+    private readonly Func<int, int, IList<T>> _fetchCallback;
+    private readonly Dictionary<int, T> _cache = new();
+    private readonly int _pageSize;
+    private int _count;
+    
+    public VirtualizingCollection(Func<int, int, IList<T>> fetchCallback, 
+                                 int count, int pageSize = 50)
+    {
+        _fetchCallback = fetchCallback;
+        _count = count;
+        _pageSize = pageSize;
+    }
+    
+    public T this[int index]
+    {
+        get
+        {
+            if (!_cache.ContainsKey(index))
+            {
+                LoadPage(index);
+            }
+            return _cache[index];
+        }
+        set => throw new NotSupportedException();
+    }
+    
+    private void LoadPage(int index)
+    {
+        var pageIndex = index / _pageSize;
+        var startIndex = pageIndex * _pageSize;
+        
+        var items = _fetchCallback(startIndex, _pageSize);
+        
+        for (int i = 0; i < items.Count; i++)
+        {
+            _cache[startIndex + i] = items[i];
+        }
+    }
+    
+    public int Count => _count;
+    public bool IsReadOnly => true;
+    
+    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    
+    // IList<T> 구현 생략...
+}
+```
+
+## 바인딩 성능 최적화
+
+### 바인딩 최적화 기법
+```csharp
+public class OptimizedViewModel : ViewModelBase
+{
+    private string _heavyProperty;
+    private string _cachedHeavyProperty;
+    private bool _isHeavyPropertyDirty = true;
+    
+    // 무거운 계산을 캐싱
+    public string HeavyComputedProperty
+    {
+        get
+        {
+            if (_isHeavyPropertyDirty)
+            {
+                _cachedHeavyProperty = PerformHeavyComputation();
+                _isHeavyPropertyDirty = false;
+            }
+            return _cachedHeavyProperty;
+        }
+    }
+    
+    public string BaseProperty
+    {
+        get => _heavyProperty;
+        set
+        {
+            if (SetProperty(ref _heavyProperty, value))
+            {
+                _isHeavyPropertyDirty = true;
+                OnPropertyChanged(nameof(HeavyComputedProperty));
+            }
+        }
+    }
+    
+    // OneTime 바인딩을 위한 정적 속성
+    public static string StaticConfigValue { get; } = 
+        ConfigurationManager.AppSettings["SomeValue"];
+    
+    // 바인딩 지연
+    private readonly DispatcherTimer _updateTimer;
+    private string _pendingSearchText;
+    
+    public string SearchText
+    {
+        get => _pendingSearchText;
+        set
+        {
+            _pendingSearchText = value;
+            _updateTimer.Stop();
+            _updateTimer.Start(); // 300ms 후 실제 업데이트
+        }
+    }
+    
+    private void OnUpdateTimerTick(object sender, EventArgs e)
+    {
+        _updateTimer.Stop();
+        PerformSearch(_pendingSearchText);
+    }
+}
+```
+
+### XAML 최적화
+```xml
+<!-- VirtualizingStackPanel 사용 -->
+<ListBox VirtualizingPanel.IsVirtualizing="True"
+         VirtualizingPanel.VirtualizationMode="Recycling"
+         ScrollViewer.CanContentScroll="True">
+    <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+            <VirtualizingStackPanel/>
+        </ItemsPanelTemplate>
+    </ListBox.ItemsPanel>
+</ListBox>
+
+<!-- 바인딩 모드 최적화 -->
+<TextBlock Text="{Binding ReadOnlyProperty, Mode=OneWay}"/>
+<TextBlock Text="{Binding StaticProperty, Mode=OneTime}"/>
+
+<!-- UpdateSourceTrigger 최적화 -->
+<TextBox Text="{Binding SearchText, 
+                UpdateSourceTrigger=LostFocus, 
+                Delay=500}"/>
+```
+
+## 실전 예제: 고급 검색 필터
+
+### ViewModel
+```csharp
+public class AdvancedSearchViewModel : ViewModelBase
+{
+    private readonly ObservableCollection<Product> _allProducts;
+    private readonly CollectionViewSource _productsViewSource;
+    
+    public AdvancedSearchViewModel()
+    {
+        _allProducts = new ObservableCollection<Product>(LoadProducts());
+        _productsViewSource = new CollectionViewSource { Source = _allProducts };
+        _productsViewSource.Filter += OnProductsFilter;
+        
+        // 초기 정렬
+        _productsViewSource.SortDescriptions.Add(
+            new SortDescription(nameof(Product.Name), ListSortDirection.Ascending));
+    }
+    
+    public ICollectionView ProductsView => _productsViewSource.View;
+    
+    // 필터 속성들
+    public string NameFilter { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public string CategoryFilter { get; set; }
+    public bool InStockOnly { get; set; }
+    
+    // 필터 적용
+    public void ApplyFilters()
+    {
+        ProductsView.Refresh();
+    }
+    
+    private void OnProductsFilter(object sender, FilterEventArgs e)
+    {
+        if (e.Item is Product product)
+        {
+            bool accepted = true;
+            
+            // 이름 필터
+            if (!string.IsNullOrWhiteSpace(NameFilter))
+            {
+                accepted &= product.Name.Contains(NameFilter, 
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            
+            // 가격 필터
+            if (MinPrice.HasValue)
+                accepted &= product.Price >= MinPrice.Value;
+            
+            if (MaxPrice.HasValue)
+                accepted &= product.Price <= MaxPrice.Value;
+            
+            // 카테고리 필터
+            if (!string.IsNullOrWhiteSpace(CategoryFilter))
+                accepted &= product.Category == CategoryFilter;
+            
+            // 재고 필터
+            if (InStockOnly)
+                accepted &= product.InStock;
+            
+            e.Accepted = accepted;
+        }
+    }
+    
+    // 정렬 변경
+    public void ChangeSorting(string propertyName)
+    {
+        var currentSort = _productsViewSource.SortDescriptions
+            .FirstOrDefault(sd => sd.PropertyName == propertyName);
+        
+        _productsViewSource.SortDescriptions.Clear();
+        
+        if (currentSort != null && currentSort.Direction == ListSortDirection.Ascending)
+        {
+            _productsViewSource.SortDescriptions.Add(
+                new SortDescription(propertyName, ListSortDirection.Descending));
+        }
+        else
+        {
+            _productsViewSource.SortDescriptions.Add(
+                new SortDescription(propertyName, ListSortDirection.Ascending));
+        }
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **MultiBinding**: 여러 소스를 하나의 타겟에 바인딩
 - **PriorityBinding**: 우선순위에 따른 바인딩 시도
@@ -557,4 +1062,6 @@ public class RangeValidationRule : ValidationRule
 - **CollectionViewSource**: 컬렉션 정렬, 필터링, 그룹화
 - **DataTemplateSelector**: 조건에 따른 템플릿 선택
 - **Method Binding**: ObjectDataProvider를 통한 메서드 바인딩
-- **Validation**: ValidationRule을 통한 입력 검증
+- **Validation**: ValidationRule과 INotifyDataErrorInfo
+- **동적 바인딩**: 런타임 바인딩 조작
+- **성능 최적화**: 가상화와 바인딩 최적화 기법
