@@ -39,6 +39,7 @@
 - [08. 커맨드 패턴](WPF/08-command-pattern.md)
 - [09. MVVM 패턴](WPF/09-mvvm-pattern.md)
 - [10. 고급 데이터 바인딩](WPF/10-advanced-data-binding.md)
+- [11. 고급 컨트롤](WPF/11-advanced-controls.md)
 
 ### 🌐 Blazor
 *Coming soon...*
