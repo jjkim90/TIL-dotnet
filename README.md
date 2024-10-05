@@ -40,6 +40,8 @@
 - [09. MVVM 패턴](WPF/09-mvvm-pattern.md)
 - [10. 고급 데이터 바인딩](WPF/10-advanced-data-binding.md)
 - [11. 고급 컨트롤](WPF/11-advanced-controls.md)
+- [12. 커스텀 컨트롤](WPF/12-custom-controls.md)
+- [13. 그래픽과 애니메이션](WPF/13-graphics-and-animation.md)
 
 ### 🌐 Blazor
 *Coming soon...*
