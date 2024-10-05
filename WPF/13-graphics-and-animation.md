@@ -976,6 +976,507 @@ public class SimpleChart : FrameworkElement
 </UserControl>
 ```
 
+## 실전 예제: 대화형 그래프
+
+```csharp
+public class InteractiveGraph : FrameworkElement
+{
+    private readonly List<Point> _points = new List<Point>();
+    private Point? _hoverPoint;
+    private readonly Random _random = new Random();
+    
+    public InteractiveGraph()
+    {
+        MouseMove += OnMouseMove;
+        MouseLeave += OnMouseLeave;
+        MouseLeftButtonDown += OnMouseLeftButtonDown;
+        
+        // 초기 데이터 생성
+        for (int i = 0; i < 10; i++)
+        {
+            _points.Add(new Point(i * 50 + 50, _random.Next(50, 250)));
+        }
+    }
+    
+    protected override void OnRender(DrawingContext dc)
+    {
+        base.OnRender(dc);
+        
+        // 배경
+        dc.DrawRectangle(Brushes.White, new Pen(Brushes.Gray, 1), 
+                        new Rect(0, 0, ActualWidth, ActualHeight));
+        
+        // 그리드
+        var gridPen = new Pen(Brushes.LightGray, 0.5);
+        for (int i = 0; i <= 10; i++)
+        {
+            double y = i * ActualHeight / 10;
+            dc.DrawLine(gridPen, new Point(0, y), new Point(ActualWidth, y));
+        }
+        
+        if (_points.Count < 2) return;
+        
+        // 경로 생성
+        var figure = new PathFigure { StartPoint = _points[0] };
+        for (int i = 1; i < _points.Count; i++)
+        {
+            figure.Segments.Add(new LineSegment(_points[i], true));
+        }
+        
+        var geometry = new PathGeometry { Figures = { figure } };
+        
+        // 그래프 선
+        dc.DrawGeometry(null, new Pen(Brushes.Blue, 2), geometry);
+        
+        // 데이터 포인트
+        foreach (var point in _points)
+        {
+            var isHovered = _hoverPoint.HasValue && 
+                          Math.Abs(point.X - _hoverPoint.Value.X) < 10 &&
+                          Math.Abs(point.Y - _hoverPoint.Value.Y) < 10;
+            
+            var brush = isHovered ? Brushes.Red : Brushes.DarkBlue;
+            var radius = isHovered ? 6 : 4;
+            
+            dc.DrawEllipse(brush, null, point, radius, radius);
+            
+            if (isHovered)
+            {
+                // 툴팁 표시
+                var text = new FormattedText(
+                    $"({point.X:F0}, {point.Y:F0})",
+                    CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Arial"),
+                    12,
+                    Brushes.Black,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                
+                var textLocation = new Point(point.X + 10, point.Y - 20);
+                dc.DrawRectangle(Brushes.LightYellow, new Pen(Brushes.Black, 1),
+                               new Rect(textLocation.X - 2, textLocation.Y - 2,
+                                      text.Width + 4, text.Height + 4));
+                dc.DrawText(text, textLocation);
+            }
+        }
+    }
+    
+    private void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        _hoverPoint = e.GetPosition(this);
+        InvalidateVisual();
+    }
+    
+    private void OnMouseLeave(object sender, MouseEventArgs e)
+    {
+        _hoverPoint = null;
+        InvalidateVisual();
+    }
+    
+    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var clickPoint = e.GetPosition(this);
+        
+        // 가장 가까운 점 찾기
+        Point? closestPoint = null;
+        double minDistance = double.MaxValue;
+        int closestIndex = -1;
+        
+        for (int i = 0; i < _points.Count; i++)
+        {
+            var distance = Math.Sqrt(
+                Math.Pow(clickPoint.X - _points[i].X, 2) +
+                Math.Pow(clickPoint.Y - _points[i].Y, 2));
+            
+            if (distance < minDistance && distance < 20)
+            {
+                minDistance = distance;
+                closestPoint = _points[i];
+                closestIndex = i;
+            }
+        }
+        
+        if (closestIndex >= 0)
+        {
+            // 점 위치 업데이트
+            _points[closestIndex] = clickPoint;
+            InvalidateVisual();
+        }
+    }
+}
+```
+
+## 애니메이션 이징 함수
+
+### 기본 이징 함수
+```xml
+<StackPanel>
+    <!-- Linear (기본) -->
+    <Rectangle Width="50" Height="50" Fill="Red" Margin="5">
+        <Rectangle.RenderTransform>
+            <TranslateTransform x:Name="linear"/>
+        </Rectangle.RenderTransform>
+        <Rectangle.Triggers>
+            <EventTrigger RoutedEvent="MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="linear"
+                                       Storyboard.TargetProperty="X"
+                                       To="200" Duration="0:0:1"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Rectangle.Triggers>
+    </Rectangle>
+    
+    <!-- QuadraticEase -->
+    <Rectangle Width="50" Height="50" Fill="Green" Margin="5">
+        <Rectangle.RenderTransform>
+            <TranslateTransform x:Name="quadratic"/>
+        </Rectangle.RenderTransform>
+        <Rectangle.Triggers>
+            <EventTrigger RoutedEvent="MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="quadratic"
+                                       Storyboard.TargetProperty="X"
+                                       To="200" Duration="0:0:1">
+                            <DoubleAnimation.EasingFunction>
+                                <QuadraticEase EasingMode="EaseInOut"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Rectangle.Triggers>
+    </Rectangle>
+    
+    <!-- BounceEase -->
+    <Rectangle Width="50" Height="50" Fill="Blue" Margin="5">
+        <Rectangle.RenderTransform>
+            <TranslateTransform x:Name="bounce"/>
+        </Rectangle.RenderTransform>
+        <Rectangle.Triggers>
+            <EventTrigger RoutedEvent="MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="bounce"
+                                       Storyboard.TargetProperty="X"
+                                       To="200" Duration="0:0:1">
+                            <DoubleAnimation.EasingFunction>
+                                <BounceEase Bounces="3" Bounciness="2"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Rectangle.Triggers>
+    </Rectangle>
+    
+    <!-- ElasticEase -->
+    <Rectangle Width="50" Height="50" Fill="Orange" Margin="5">
+        <Rectangle.RenderTransform>
+            <TranslateTransform x:Name="elastic"/>
+        </Rectangle.RenderTransform>
+        <Rectangle.Triggers>
+            <EventTrigger RoutedEvent="MouseEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetName="elastic"
+                                       Storyboard.TargetProperty="X"
+                                       To="200" Duration="0:0:1">
+                            <DoubleAnimation.EasingFunction>
+                                <ElasticEase Oscillations="3" Springiness="3"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Rectangle.Triggers>
+    </Rectangle>
+</StackPanel>
+```
+
+### 사용자 정의 이징 함수
+```csharp
+public class CustomEaseFunction : EasingFunctionBase
+{
+    protected override double EaseInCore(double normalizedTime)
+    {
+        // 사용자 정의 이징 곡선
+        return Math.Pow(normalizedTime, 3);
+    }
+    
+    protected override Freezable CreateInstanceCore()
+    {
+        return new CustomEaseFunction();
+    }
+}
+```
+
+## 팜틀 애니메이션
+
+### 팜틀 애니메이션 예제
+```csharp
+public class ParticleSystem : FrameworkElement
+{
+    private class Particle
+    {
+        public Point Position { get; set; }
+        public Vector Velocity { get; set; }
+        public double Life { get; set; }
+        public double Size { get; set; }
+        public Color Color { get; set; }
+    }
+    
+    private readonly List<Particle> _particles = new List<Particle>();
+    private readonly Random _random = new Random();
+    private readonly DispatcherTimer _timer;
+    private Point _emitterPosition;
+    
+    public ParticleSystem()
+    {
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+        _timer.Tick += OnTimerTick;
+        _timer.Start();
+        
+        MouseMove += (s, e) => _emitterPosition = e.GetPosition(this);
+    }
+    
+    private void OnTimerTick(object sender, EventArgs e)
+    {
+        // 새 팜틀 생성
+        for (int i = 0; i < 5; i++)
+        {
+            _particles.Add(new Particle
+            {
+                Position = _emitterPosition,
+                Velocity = new Vector(
+                    (_random.NextDouble() - 0.5) * 10,
+                    _random.NextDouble() * -10 - 5),
+                Life = 1.0,
+                Size = _random.NextDouble() * 6 + 2,
+                Color = Color.FromRgb(
+                    (byte)_random.Next(200, 255),
+                    (byte)_random.Next(100, 200),
+                    (byte)_random.Next(0, 100))
+            });
+        }
+        
+        // 팜틀 업데이트
+        for (int i = _particles.Count - 1; i >= 0; i--)
+        {
+            var p = _particles[i];
+            p.Position = new Point(
+                p.Position.X + p.Velocity.X,
+                p.Position.Y + p.Velocity.Y);
+            p.Velocity = new Vector(
+                p.Velocity.X,
+                p.Velocity.Y + 0.5); // 중력
+            p.Life -= 0.02;
+            
+            if (p.Life <= 0)
+                _particles.RemoveAt(i);
+        }
+        
+        InvalidateVisual();
+    }
+    
+    protected override void OnRender(DrawingContext dc)
+    {
+        foreach (var particle in _particles)
+        {
+            var brush = new SolidColorBrush(
+                Color.FromArgb(
+                    (byte)(particle.Life * 255),
+                    particle.Color.R,
+                    particle.Color.G,
+                    particle.Color.B));
+            
+            dc.DrawEllipse(brush, null,
+                particle.Position,
+                particle.Size * particle.Life,
+                particle.Size * particle.Life);
+        }
+    }
+}
+```
+
+## 고급 애니메이션 기법
+
+### 프레임 기반 애니메이션
+```csharp
+public class FrameBasedAnimation : FrameworkElement
+{
+    private readonly CompositionTarget _compositionTarget;
+    private double _angle = 0;
+    private long _lastTime;
+    
+    public FrameBasedAnimation()
+    {
+        CompositionTarget.Rendering += OnRendering;
+        _lastTime = DateTime.Now.Ticks;
+    }
+    
+    private void OnRendering(object sender, EventArgs e)
+    {
+        long currentTime = DateTime.Now.Ticks;
+        double deltaTime = (currentTime - _lastTime) / 10000000.0;
+        _lastTime = currentTime;
+        
+        // 프레임당 업데이트
+        _angle += 180 * deltaTime; // 180도/초
+        if (_angle > 360) _angle -= 360;
+        
+        InvalidateVisual();
+    }
+    
+    protected override void OnRender(DrawingContext dc)
+    {
+        var center = new Point(ActualWidth / 2, ActualHeight / 2);
+        var transform = new RotateTransform(_angle, center.X, center.Y);
+        
+        dc.PushTransform(transform);
+        dc.DrawRectangle(Brushes.Blue, null,
+            new Rect(center.X - 50, center.Y - 50, 100, 100));
+        dc.Pop();
+    }
+}
+```
+
+### 복합 애니메이션
+```xml
+<UserControl x:Class="ComplexAnimation">
+    <UserControl.Resources>
+        <Storyboard x:Key="ComplexStoryboard">
+            <!-- 위치 애니메이션 -->
+            <DoubleAnimationUsingKeyFrames
+                Storyboard.TargetName="animatedElement"
+                Storyboard.TargetProperty="(Canvas.Left)">
+                <SplineDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <SplineDoubleKeyFrame KeyTime="0:0:1" Value="200">
+                    <SplineDoubleKeyFrame.KeySpline>
+                        <KeySpline ControlPoint1="0.5,0" ControlPoint2="0.5,1"/>
+                    </SplineDoubleKeyFrame.KeySpline>
+                </SplineDoubleKeyFrame>
+                <SplineDoubleKeyFrame KeyTime="0:0:2" Value="100"/>
+            </DoubleAnimationUsingKeyFrames>
+            
+            <!-- 크기 애니메이션 -->
+            <DoubleAnimation
+                Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleX"
+                From="1" To="1.5" Duration="0:0:1"
+                AutoReverse="True"/>
+            <DoubleAnimation
+                Storyboard.TargetName="scaleTransform"
+                Storyboard.TargetProperty="ScaleY"
+                From="1" To="1.5" Duration="0:0:1"
+                AutoReverse="True"/>
+            
+            <!-- 회전 애니메이션 -->
+            <DoubleAnimation
+                Storyboard.TargetName="rotateTransform"
+                Storyboard.TargetProperty="Angle"
+                From="0" To="360" Duration="0:0:2"/>
+            
+            <!-- 색상 애니메이션 -->
+            <ColorAnimation
+                Storyboard.TargetName="animatedBrush"
+                Storyboard.TargetProperty="Color"
+                From="Blue" To="Red" Duration="0:0:2"/>
+        </Storyboard>
+    </UserControl.Resources>
+    
+    <Canvas>
+        <Rectangle x:Name="animatedElement" Width="100" Height="100"
+                   Canvas.Left="0" Canvas.Top="100">
+            <Rectangle.Fill>
+                <SolidColorBrush x:Name="animatedBrush" Color="Blue"/>
+            </Rectangle.Fill>
+            <Rectangle.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="scaleTransform" CenterX="50" CenterY="50"/>
+                    <RotateTransform x:Name="rotateTransform" CenterX="50" CenterY="50"/>
+                </TransformGroup>
+            </Rectangle.RenderTransform>
+        </Rectangle>
+    </Canvas>
+</UserControl>
+```
+
+## 성능 최적화 팁
+
+### RenderTargetBitmap 사용
+```csharp
+public class CachedVisual : FrameworkElement
+{
+    private RenderTargetBitmap _cache;
+    private bool _isDirty = true;
+    
+    protected override void OnRender(DrawingContext dc)
+    {
+        if (_isDirty || _cache == null)
+        {
+            // 복잡한 그래픽을 비트맵으로 캐싱
+            _cache = new RenderTargetBitmap(
+                (int)ActualWidth, (int)ActualHeight,
+                96, 96, PixelFormats.Pbgra32);
+            
+            var visual = new DrawingVisual();
+            using (var context = visual.RenderOpen())
+            {
+                DrawComplexGraphics(context);
+            }
+            
+            _cache.Render(visual);
+            _isDirty = false;
+        }
+        
+        dc.DrawImage(_cache, new Rect(0, 0, ActualWidth, ActualHeight));
+    }
+    
+    private void DrawComplexGraphics(DrawingContext dc)
+    {
+        // 복잡한 그래픽 그리기
+        for (int i = 0; i < 1000; i++)
+        {
+            var x = Random.Shared.Next((int)ActualWidth);
+            var y = Random.Shared.Next((int)ActualHeight);
+            dc.DrawEllipse(Brushes.Blue, null, new Point(x, y), 2, 2);
+        }
+    }
+}
+```
+
+### GPU 가속
+```csharp
+public static class AnimationOptimizer
+{
+    public static void EnableGPUAcceleration(FrameworkElement element)
+    {
+        // 렌더링 캐싱 활성화
+        RenderOptions.SetCachingHint(element, CachingHint.Cache);
+        RenderOptions.SetCacheInvalidationThresholdMinimum(element, 0.5);
+        RenderOptions.SetCacheInvalidationThresholdMaximum(element, 2.0);
+        
+        // 비트맵 스케일링 모드
+        RenderOptions.SetBitmapScalingMode(element, BitmapScalingMode.LowQuality);
+    }
+    
+    public static void OptimizeForAnimation(UIElement element)
+    {
+        // 애니메이션 중 더 빠른 렌더링
+        element.CacheMode = new BitmapCache
+        {
+            EnableClearType = false,
+            RenderAtScale = 1.0,
+            SnapsToDevicePixels = false
+        };
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **Shape**: 기본 도형 클래스 (Line, Rectangle, Ellipse, Path 등)
 - **Brush**: 채우기 방식 (SolidColorBrush, LinearGradientBrush, ImageBrush 등)
@@ -987,3 +1488,5 @@ public class SimpleChart : FrameworkElement
 - **3D Graphics**: Viewport3D를 통한 3D 렌더링
 - **Effects**: 그래픽 효과 (DropShadow, Blur 등)
 - **DrawingContext**: 직접 그리기를 위한 API
+- **Easing Functions**: 자연스러운 애니메이션 효과
+- **Performance**: RenderTargetBitmap, CacheMode 등 최적화 기법
