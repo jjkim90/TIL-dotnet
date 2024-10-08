@@ -1043,6 +1043,783 @@ public class TouchGestureBehavior : Behavior<UIElement>
 }
 ```
 
+## 마우스 캡처와 포커스
+
+### 마우스 캡처
+```csharp
+public class MouseCaptureBehavior : Behavior<FrameworkElement>
+{
+    private bool _isCapturing;
+    private Point _capturePoint;
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        AssociatedObject.MouseLeftButtonDown += OnMouseLeftButtonDown;
+        AssociatedObject.MouseLeftButtonUp += OnMouseLeftButtonUp;
+        AssociatedObject.MouseMove += OnMouseMove;
+        AssociatedObject.LostMouseCapture += OnLostMouseCapture;
+    }
+    
+    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _isCapturing = true;
+        _capturePoint = e.GetPosition(AssociatedObject);
+        AssociatedObject.CaptureMouse();
+        
+        // 시각적 피드백
+        AssociatedObject.Opacity = 0.7;
+    }
+    
+    private void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_isCapturing)
+        {
+            var currentPoint = e.GetPosition(AssociatedObject);
+            var distance = Math.Sqrt(
+                Math.Pow(currentPoint.X - _capturePoint.X, 2) +
+                Math.Pow(currentPoint.Y - _capturePoint.Y, 2));
+            
+            // 드래그 거리에 따른 처리
+            if (distance > 5)
+            {
+                // 드래그 시작
+                OnDragStarted();
+            }
+        }
+    }
+    
+    private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_isCapturing)
+        {
+            _isCapturing = false;
+            AssociatedObject.ReleaseMouseCapture();
+            AssociatedObject.Opacity = 1.0;
+        }
+    }
+    
+    private void OnLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        _isCapturing = false;
+        AssociatedObject.Opacity = 1.0;
+    }
+    
+    private void OnDragStarted()
+    {
+        // 드래그 시작 로직
+    }
+}
+```
+
+### 포커스 관리
+```csharp
+public class FocusManagerBehavior : Behavior<Control>
+{
+    public static readonly DependencyProperty FocusOnLoadProperty =
+        DependencyProperty.Register(
+            nameof(FocusOnLoad),
+            typeof(bool),
+            typeof(FocusManagerBehavior),
+            new PropertyMetadata(false));
+    
+    public static readonly DependencyProperty SelectAllOnFocusProperty =
+        DependencyProperty.Register(
+            nameof(SelectAllOnFocus),
+            typeof(bool),
+            typeof(FocusManagerBehavior),
+            new PropertyMetadata(false));
+    
+    public bool FocusOnLoad
+    {
+        get => (bool)GetValue(FocusOnLoadProperty);
+        set => SetValue(FocusOnLoadProperty, value);
+    }
+    
+    public bool SelectAllOnFocus
+    {
+        get => (bool)GetValue(SelectAllOnFocusProperty);
+        set => SetValue(SelectAllOnFocusProperty, value);
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        if (FocusOnLoad)
+        {
+            AssociatedObject.Loaded += OnLoaded;
+        }
+        
+        if (SelectAllOnFocus && AssociatedObject is TextBox)
+        {
+            AssociatedObject.GotFocus += OnGotFocus;
+        }
+        
+        // 포커스 추적
+        AssociatedObject.GotFocus += OnFocusChanged;
+        AssociatedObject.LostFocus += OnFocusChanged;
+    }
+    
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        AssociatedObject.Focus();
+        Keyboard.Focus(AssociatedObject);
+    }
+    
+    private void OnGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            textBox.SelectAll();
+        }
+    }
+    
+    private void OnFocusChanged(object sender, RoutedEventArgs e)
+    {
+        Debug.WriteLine($"Focus changed: {e.RoutedEvent.Name} on {AssociatedObject.Name}");
+    }
+}
+```
+
+## 입력 검증 Behavior
+
+### 실시간 입력 검증
+```csharp
+public class ValidationBehavior : Behavior<TextBox>
+{
+    public static readonly DependencyProperty ValidationRuleProperty =
+        DependencyProperty.Register(
+            nameof(ValidationRule),
+            typeof(IValidationRule),
+            typeof(ValidationBehavior));
+    
+    public static readonly DependencyProperty ErrorTemplateProperty =
+        DependencyProperty.Register(
+            nameof(ErrorTemplate),
+            typeof(DataTemplate),
+            typeof(ValidationBehavior));
+    
+    public IValidationRule ValidationRule
+    {
+        get => (IValidationRule)GetValue(ValidationRuleProperty);
+        set => SetValue(ValidationRuleProperty, value);
+    }
+    
+    public DataTemplate ErrorTemplate
+    {
+        get => (DataTemplate)GetValue(ErrorTemplateProperty);
+        set => SetValue(ErrorTemplateProperty, value);
+    }
+    
+    private Popup _errorPopup;
+    private ContentControl _errorContent;
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        AssociatedObject.TextChanged += OnTextChanged;
+        AssociatedObject.LostFocus += OnLostFocus;
+        
+        CreateErrorPopup();
+    }
+    
+    private void CreateErrorPopup()
+    {
+        _errorPopup = new Popup
+        {
+            PlacementTarget = AssociatedObject,
+            Placement = PlacementMode.Bottom,
+            StaysOpen = false
+        };
+        
+        _errorContent = new ContentControl
+        {
+            ContentTemplate = ErrorTemplate
+        };
+        
+        _errorPopup.Child = _errorContent;
+    }
+    
+    private void OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+        Validate();
+    }
+    
+    private void OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (!Validate())
+        {
+            // 포커스 유지
+            AssociatedObject.Focus();
+        }
+    }
+    
+    private bool Validate()
+    {
+        if (ValidationRule == null)
+            return true;
+        
+        var result = ValidationRule.Validate(AssociatedObject.Text);
+        
+        if (result.IsValid)
+        {
+            AssociatedObject.BorderBrush = Brushes.Gray;
+            _errorPopup.IsOpen = false;
+        }
+        else
+        {
+            AssociatedObject.BorderBrush = Brushes.Red;
+            _errorContent.Content = result.ErrorMessage;
+            _errorPopup.IsOpen = true;
+        }
+        
+        return result.IsValid;
+    }
+}
+
+public interface IValidationRule
+{
+    ValidationResult Validate(string value);
+}
+
+public class ValidationResult
+{
+    public bool IsValid { get; set; }
+    public string ErrorMessage { get; set; }
+}
+```
+
+## 애니메이션 Behavior
+
+### 호버 애니메이션
+```csharp
+public class HoverAnimationBehavior : Behavior<FrameworkElement>
+{
+    public static readonly DependencyProperty ScaleProperty =
+        DependencyProperty.Register(
+            nameof(Scale),
+            typeof(double),
+            typeof(HoverAnimationBehavior),
+            new PropertyMetadata(1.1));
+    
+    public static readonly DependencyProperty DurationProperty =
+        DependencyProperty.Register(
+            nameof(Duration),
+            typeof(Duration),
+            typeof(HoverAnimationBehavior),
+            new PropertyMetadata(new Duration(TimeSpan.FromMilliseconds(200))));
+    
+    public double Scale
+    {
+        get => (double)GetValue(ScaleProperty);
+        set => SetValue(ScaleProperty, value);
+    }
+    
+    public Duration Duration
+    {
+        get => (Duration)GetValue(DurationProperty);
+        set => SetValue(DurationProperty, value);
+    }
+    
+    private ScaleTransform _scaleTransform;
+    private Storyboard _mouseEnterStoryboard;
+    private Storyboard _mouseLeaveStoryboard;
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        // Transform 설정
+        _scaleTransform = new ScaleTransform(1, 1);
+        AssociatedObject.RenderTransform = _scaleTransform;
+        AssociatedObject.RenderTransformOrigin = new Point(0.5, 0.5);
+        
+        // 애니메이션 생성
+        CreateAnimations();
+        
+        // 이벤트 연결
+        AssociatedObject.MouseEnter += OnMouseEnter;
+        AssociatedObject.MouseLeave += OnMouseLeave;
+    }
+    
+    private void CreateAnimations()
+    {
+        // Mouse Enter 애니메이션
+        _mouseEnterStoryboard = new Storyboard();
+        
+        var scaleXAnimation = new DoubleAnimation(Scale, Duration);
+        Storyboard.SetTarget(scaleXAnimation, _scaleTransform);
+        Storyboard.SetTargetProperty(scaleXAnimation, 
+            new PropertyPath(ScaleTransform.ScaleXProperty));
+        
+        var scaleYAnimation = new DoubleAnimation(Scale, Duration);
+        Storyboard.SetTarget(scaleYAnimation, _scaleTransform);
+        Storyboard.SetTargetProperty(scaleYAnimation, 
+            new PropertyPath(ScaleTransform.ScaleYProperty));
+        
+        _mouseEnterStoryboard.Children.Add(scaleXAnimation);
+        _mouseEnterStoryboard.Children.Add(scaleYAnimation);
+        
+        // Mouse Leave 애니메이션
+        _mouseLeaveStoryboard = new Storyboard();
+        
+        var scaleBackXAnimation = new DoubleAnimation(1.0, Duration);
+        Storyboard.SetTarget(scaleBackXAnimation, _scaleTransform);
+        Storyboard.SetTargetProperty(scaleBackXAnimation, 
+            new PropertyPath(ScaleTransform.ScaleXProperty));
+        
+        var scaleBackYAnimation = new DoubleAnimation(1.0, Duration);
+        Storyboard.SetTarget(scaleBackYAnimation, _scaleTransform);
+        Storyboard.SetTargetProperty(scaleBackYAnimation, 
+            new PropertyPath(ScaleTransform.ScaleYProperty));
+        
+        _mouseLeaveStoryboard.Children.Add(scaleBackXAnimation);
+        _mouseLeaveStoryboard.Children.Add(scaleBackYAnimation);
+    }
+    
+    private void OnMouseEnter(object sender, MouseEventArgs e)
+    {
+        _mouseLeaveStoryboard.Stop();
+        _mouseEnterStoryboard.Begin();
+    }
+    
+    private void OnMouseLeave(object sender, MouseEventArgs e)
+    {
+        _mouseEnterStoryboard.Stop();
+        _mouseLeaveStoryboard.Begin();
+    }
+}
+```
+
+## 비동기 이벤트 처리
+
+### 비동기 작업과 이벤트
+```csharp
+public class AsyncEventBehavior : Behavior<Button>
+{
+    private CancellationTokenSource _cancellationTokenSource;
+    
+    public static readonly DependencyProperty AsyncCommandProperty =
+        DependencyProperty.Register(
+            nameof(AsyncCommand),
+            typeof(IAsyncCommand),
+            typeof(AsyncEventBehavior));
+    
+    public IAsyncCommand AsyncCommand
+    {
+        get => (IAsyncCommand)GetValue(AsyncCommandProperty);
+        set => SetValue(AsyncCommandProperty, value);
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        AssociatedObject.Click += OnClick;
+    }
+    
+    private async void OnClick(object sender, RoutedEventArgs e)
+    {
+        if (AsyncCommand == null || !AsyncCommand.CanExecute(null))
+            return;
+        
+        // 이전 작업 취소
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+        
+        // UI 업데이트
+        AssociatedObject.IsEnabled = false;
+        
+        try
+        {
+            await AsyncCommand.ExecuteAsync(null, _cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // 취소됨
+        }
+        catch (Exception ex)
+        {
+            // 오류 처리
+            MessageBox.Show($"Error: {ex.Message}");
+        }
+        finally
+        {
+            AssociatedObject.IsEnabled = true;
+        }
+    }
+    
+    protected override void OnDetaching()
+    {
+        base.OnDetaching();
+        _cancellationTokenSource?.Cancel();
+        AssociatedObject.Click -= OnClick;
+    }
+}
+
+public interface IAsyncCommand
+{
+    bool CanExecute(object parameter);
+    Task ExecuteAsync(object parameter, CancellationToken cancellationToken);
+}
+```
+
+## 컴포지트 Behavior
+
+### 여러 Behavior 결합
+```csharp
+public class CompositeBehavior : Behavior<FrameworkElement>
+{
+    private readonly List<Behavior> _behaviors = new List<Behavior>();
+    
+    public List<Behavior> Behaviors => _behaviors;
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        foreach (var behavior in _behaviors)
+        {
+            behavior.Attach(AssociatedObject);
+        }
+    }
+    
+    protected override void OnDetaching()
+    {
+        base.OnDetaching();
+        
+        foreach (var behavior in _behaviors)
+        {
+            behavior.Detach();
+        }
+    }
+}
+
+// 사용 예제
+public class InteractiveButtonBehavior : CompositeBehavior
+{
+    public InteractiveButtonBehavior()
+    {
+        Behaviors.Add(new HoverAnimationBehavior { Scale = 1.1 });
+        Behaviors.Add(new SoundEffectBehavior { SoundFile = "click.wav" });
+        Behaviors.Add(new RippleEffectBehavior { Color = Colors.Blue });
+    }
+}
+```
+
+## 상태 기반 Behavior
+
+### Visual State를 사용한 Behavior
+```csharp
+public class StateBasedBehavior : Behavior<Control>
+{
+    public static readonly DependencyProperty StateProperty =
+        DependencyProperty.Register(
+            nameof(State),
+            typeof(string),
+            typeof(StateBasedBehavior),
+            new PropertyMetadata(string.Empty, OnStateChanged));
+    
+    public string State
+    {
+        get => (string)GetValue(StateProperty);
+        set => SetValue(StateProperty, value);
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        UpdateVisualState();
+    }
+    
+    private static void OnStateChanged(DependencyObject d, 
+                                      DependencyPropertyChangedEventArgs e)
+    {
+        var behavior = (StateBasedBehavior)d;
+        behavior.UpdateVisualState();
+    }
+    
+    private void UpdateVisualState()
+    {
+        if (AssociatedObject != null && !string.IsNullOrEmpty(State))
+        {
+            VisualStateManager.GoToState(AssociatedObject, State, true);
+        }
+    }
+}
+```
+
+## 성능 최적화를 위한 이벤트 처리
+
+### 이벤트 쓰로틀링
+```csharp
+public class ThrottledEventBehavior : Behavior<UIElement>
+{
+    private readonly DispatcherTimer _timer;
+    private EventArgs _lastEventArgs;
+    
+    public static readonly DependencyProperty ThrottleIntervalProperty =
+        DependencyProperty.Register(
+            nameof(ThrottleInterval),
+            typeof(TimeSpan),
+            typeof(ThrottledEventBehavior),
+            new PropertyMetadata(TimeSpan.FromMilliseconds(100)));
+    
+    public static readonly DependencyProperty CommandProperty =
+        DependencyProperty.Register(
+            nameof(Command),
+            typeof(ICommand),
+            typeof(ThrottledEventBehavior));
+    
+    public TimeSpan ThrottleInterval
+    {
+        get => (TimeSpan)GetValue(ThrottleIntervalProperty);
+        set => SetValue(ThrottleIntervalProperty, value);
+    }
+    
+    public ICommand Command
+    {
+        get => (ICommand)GetValue(CommandProperty);
+        set => SetValue(CommandProperty, value);
+    }
+    
+    public ThrottledEventBehavior()
+    {
+        _timer = new DispatcherTimer();
+        _timer.Tick += OnTimerTick;
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        _timer.Interval = ThrottleInterval;
+        AssociatedObject.MouseMove += OnMouseMove;
+    }
+    
+    private void OnMouseMove(object sender, MouseEventArgs e)
+    {
+        _lastEventArgs = e;
+        
+        if (!_timer.IsEnabled)
+        {
+            _timer.Start();
+            ExecuteCommand();
+        }
+    }
+    
+    private void OnTimerTick(object sender, EventArgs e)
+    {
+        _timer.Stop();
+    }
+    
+    private void ExecuteCommand()
+    {
+        if (Command?.CanExecute(_lastEventArgs) == true)
+        {
+            Command.Execute(_lastEventArgs);
+        }
+    }
+}
+```
+
+### 이벤트 디바운싱
+```csharp
+public class DebouncedEventBehavior : Behavior<TextBox>
+{
+    private DispatcherTimer _debounceTimer;
+    
+    public static readonly DependencyProperty DebounceDelayProperty =
+        DependencyProperty.Register(
+            nameof(DebounceDelay),
+            typeof(TimeSpan),
+            typeof(DebouncedEventBehavior),
+            new PropertyMetadata(TimeSpan.FromMilliseconds(500)));
+    
+    public static readonly DependencyProperty CommandProperty =
+        DependencyProperty.Register(
+            nameof(Command),
+            typeof(ICommand),
+            typeof(DebouncedEventBehavior));
+    
+    public TimeSpan DebounceDelay
+    {
+        get => (TimeSpan)GetValue(DebounceDelayProperty);
+        set => SetValue(DebounceDelayProperty, value);
+    }
+    
+    public ICommand Command
+    {
+        get => (ICommand)GetValue(CommandProperty);
+        set => SetValue(CommandProperty, value);
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        _debounceTimer = new DispatcherTimer
+        {
+            Interval = DebounceDelay
+        };
+        _debounceTimer.Tick += OnDebounceTimerTick;
+        
+        AssociatedObject.TextChanged += OnTextChanged;
+    }
+    
+    private void OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+    }
+    
+    private void OnDebounceTimerTick(object sender, EventArgs e)
+    {
+        _debounceTimer.Stop();
+        
+        if (Command?.CanExecute(AssociatedObject.Text) == true)
+        {
+            Command.Execute(AssociatedObject.Text);
+        }
+    }
+    
+    protected override void OnDetaching()
+    {
+        base.OnDetaching();
+        
+        _debounceTimer?.Stop();
+        AssociatedObject.TextChanged -= OnTextChanged;
+    }
+}
+```
+
+## 실전 예제: 상호작용 리스트
+
+```csharp
+public class InteractiveListBehavior : Behavior<ListBox>
+{
+    private ListBoxItem _draggedItem;
+    private Point _dragStartPoint;
+    
+    public static readonly DependencyProperty AllowReorderProperty =
+        DependencyProperty.Register(
+            nameof(AllowReorder),
+            typeof(bool),
+            typeof(InteractiveListBehavior),
+            new PropertyMetadata(true));
+    
+    public static readonly DependencyProperty ReorderCommandProperty =
+        DependencyProperty.Register(
+            nameof(ReorderCommand),
+            typeof(ICommand),
+            typeof(InteractiveListBehavior));
+    
+    public bool AllowReorder
+    {
+        get => (bool)GetValue(AllowReorderProperty);
+        set => SetValue(AllowReorderProperty, value);
+    }
+    
+    public ICommand ReorderCommand
+    {
+        get => (ICommand)GetValue(ReorderCommandProperty);
+        set => SetValue(ReorderCommandProperty, value);
+    }
+    
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+        
+        AssociatedObject.PreviewMouseLeftButtonDown += OnPreviewMouseLeftButtonDown;
+        AssociatedObject.PreviewMouseMove += OnPreviewMouseMove;
+        AssociatedObject.PreviewMouseLeftButtonUp += OnPreviewMouseLeftButtonUp;
+        AssociatedObject.Drop += OnDrop;
+        AssociatedObject.DragOver += OnDragOver;
+    }
+    
+    private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!AllowReorder) return;
+        
+        _dragStartPoint = e.GetPosition(null);
+        _draggedItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
+    }
+    
+    private void OnPreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_draggedItem == null || e.LeftButton != MouseButtonState.Pressed)
+            return;
+        
+        var currentPosition = e.GetPosition(null);
+        var diff = _dragStartPoint - currentPosition;
+        
+        if (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+            Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance)
+        {
+            // 드래그 시작
+            var data = new DataObject("ListBoxItem", _draggedItem.DataContext);
+            DragDrop.DoDragDrop(_draggedItem, data, DragDropEffects.Move);
+        }
+    }
+    
+    private void OnDragOver(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent("ListBoxItem"))
+        {
+            e.Effects = DragDropEffects.None;
+            return;
+        }
+        
+        // 드롭 위치 시각화
+        var targetItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
+        if (targetItem != null)
+        {
+            var adornerLayer = AdornerLayer.GetAdornerLayer(targetItem);
+            // 삽입 위치 표시 로직
+        }
+    }
+    
+    private void OnDrop(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent("ListBoxItem")) return;
+        
+        var droppedData = e.Data.GetData("ListBoxItem");
+        var targetItem = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
+        
+        if (targetItem != null && ReorderCommand?.CanExecute(null) == true)
+        {
+            var reorderInfo = new ReorderInfo
+            {
+                Item = droppedData,
+                NewIndex = AssociatedObject.ItemContainerGenerator.IndexFromContainer(targetItem)
+            };
+            
+            ReorderCommand.Execute(reorderInfo);
+        }
+    }
+    
+    private static T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+    {
+        while (current != null)
+        {
+            if (current is T ancestor)
+                return ancestor;
+            
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+}
+
+public class ReorderInfo
+{
+    public object Item { get; set; }
+    public int NewIndex { get; set; }
+}
+```
+
 ## 핵심 개념 정리
 - **라우팅 이벤트**: Bubbling, Tunneling, Direct 전략
 - **이벤트 핸들러**: XAML과 코드비하인드에서 처리
@@ -1054,3 +1831,8 @@ public class TouchGestureBehavior : Behavior<UIElement>
 - **EventToCommand**: MVVM에서 이벤트 처리
 - **제스처**: 키보드, 마우스, 터치 입력 처리
 - **드래그 앤 드롭**: 데이터 전송 구현
+- **마우스 캡처**: 마우스 입력 독점
+- **포커스 관리**: 키보드 입력 처리
+- **입력 검증**: 실시간 유효성 검사
+- **비동기 이벤트**: async/await와 함께 사용
+- **성능 최적화**: 쓰로틀링과 디바운싱
