@@ -43,6 +43,8 @@
 - [12. 커스텀 컨트롤](WPF/12-custom-controls.md)
 - [13. 그래픽과 애니메이션](WPF/13-graphics-and-animation.md)
 - [14. 이벤트와 동작](WPF/14-events-and-behaviors.md)
+- [15. 내비게이션과 창](WPF/15-navigation-and-windows.md)
+- [16. 성능 최적화](WPF/16-performance-optimization.md)
 
 ### 🌐 Blazor
 *Coming soon...*
