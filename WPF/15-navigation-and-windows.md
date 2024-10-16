@@ -1025,6 +1025,623 @@ public abstract class TabItemViewModel : ViewModelBase
 </UserControl>
 ```
 
+## Window 간 통신
+
+### Messenger 패턴
+```csharp
+public class WindowMessenger
+{
+    private static readonly WindowMessenger _instance = new WindowMessenger();
+    public static WindowMessenger Default => _instance;
+    
+    private readonly Dictionary<Type, List<WeakReference>> _subscribers = 
+        new Dictionary<Type, List<WeakReference>>();
+    
+    public void Register<TMessage>(object recipient, Action<TMessage> action)
+    {
+        var messageType = typeof(TMessage);
+        
+        if (!_subscribers.ContainsKey(messageType))
+        {
+            _subscribers[messageType] = new List<WeakReference>();
+        }
+        
+        _subscribers[messageType].Add(new WeakReference(new Subscription<TMessage>
+        {
+            Recipient = recipient,
+            Action = action
+        }));
+    }
+    
+    public void Send<TMessage>(TMessage message)
+    {
+        var messageType = typeof(TMessage);
+        
+        if (_subscribers.ContainsKey(messageType))
+        {
+            var subscriptions = _subscribers[messageType];
+            var deadRefs = new List<WeakReference>();
+            
+            foreach (var weakRef in subscriptions)
+            {
+                if (weakRef.IsAlive)
+                {
+                    var subscription = weakRef.Target as Subscription<TMessage>;
+                    subscription?.Action(message);
+                }
+                else
+                {
+                    deadRefs.Add(weakRef);
+                }
+            }
+            
+            // 죽은 참조 제거
+            foreach (var deadRef in deadRefs)
+            {
+                subscriptions.Remove(deadRef);
+            }
+        }
+    }
+    
+    private class Subscription<T>
+    {
+        public object Recipient { get; set; }
+        public Action<T> Action { get; set; }
+    }
+}
+
+// 메시지 클래스
+public class OpenWindowMessage
+{
+    public string WindowType { get; set; }
+    public object Parameter { get; set; }
+}
+
+public class CloseWindowMessage
+{
+    public string WindowId { get; set; }
+}
+```
+
+### Owner Window 관계
+```csharp
+public class ChildWindowManager
+{
+    private readonly Window _owner;
+    private readonly List<Window> _childWindows = new List<Window>();
+    
+    public ChildWindowManager(Window owner)
+    {
+        _owner = owner;
+        _owner.Closing += OnOwnerClosing;
+    }
+    
+    public void ShowChildWindow(Window child, bool modal = false)
+    {
+        child.Owner = _owner;
+        _childWindows.Add(child);
+        
+        child.Closed += (s, e) => _childWindows.Remove(child);
+        
+        if (modal)
+        {
+            child.ShowDialog();
+        }
+        else
+        {
+            child.Show();
+        }
+    }
+    
+    private void OnOwnerClosing(object sender, CancelEventArgs e)
+    {
+        // 자식 창들 확인
+        var openChildWindows = _childWindows.ToList();
+        if (openChildWindows.Any())
+        {
+            var result = MessageBox.Show(
+                $"{openChildWindows.Count}개의 창이 열려 있습니다. 모두 닫고 종료하시겠습니까?",
+                "확인",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                foreach (var child in openChildWindows)
+                {
+                    child.Close();
+                }
+            }
+            else
+            {
+                e.Cancel = true;
+            }
+        }
+    }
+}
+```
+
+## 창 애니메이션
+
+### 창 표시 애니메이션
+```csharp
+public static class WindowAnimations
+{
+    public static void ShowWithFadeIn(Window window, double duration = 0.3)
+    {
+        window.Opacity = 0;
+        window.Show();
+        
+        var animation = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromSeconds(duration),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        
+        window.BeginAnimation(UIElement.OpacityProperty, animation);
+    }
+    
+    public static void ShowWithSlideIn(Window window, SlideDirection direction, double duration = 0.3)
+    {
+        window.Show();
+        
+        var transform = new TranslateTransform();
+        window.RenderTransform = transform;
+        
+        double fromValue = 0;
+        switch (direction)
+        {
+            case SlideDirection.Left:
+                fromValue = -window.Width;
+                break;
+            case SlideDirection.Right:
+                fromValue = window.Width;
+                break;
+            case SlideDirection.Top:
+                fromValue = -window.Height;
+                break;
+            case SlideDirection.Bottom:
+                fromValue = window.Height;
+                break;
+        }
+        
+        var animation = new DoubleAnimation
+        {
+            From = fromValue,
+            To = 0,
+            Duration = TimeSpan.FromSeconds(duration),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        
+        var property = (direction == SlideDirection.Left || direction == SlideDirection.Right)
+            ? TranslateTransform.XProperty
+            : TranslateTransform.YProperty;
+        
+        transform.BeginAnimation(property, animation);
+    }
+    
+    public static async Task CloseWithFadeOut(Window window, double duration = 0.3)
+    {
+        var animation = new DoubleAnimation
+        {
+            From = 1,
+            To = 0,
+            Duration = TimeSpan.FromSeconds(duration),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        
+        var tcs = new TaskCompletionSource<bool>();
+        animation.Completed += (s, e) => tcs.SetResult(true);
+        
+        window.BeginAnimation(UIElement.OpacityProperty, animation);
+        await tcs.Task;
+        
+        window.Close();
+    }
+}
+
+public enum SlideDirection
+{
+    Left, Right, Top, Bottom
+}
+```
+
+## 창 상태 저장 및 복원
+
+### 고급 창 상태 관리
+```csharp
+public class WindowStateService
+{
+    private readonly string _settingsPath;
+    
+    public WindowStateService()
+    {
+        _settingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyApp",
+            "WindowStates.json");
+    }
+    
+    public void TrackWindow(Window window, string windowId)
+    {
+        window.SourceInitialized += (s, e) => RestoreWindowState(window, windowId);
+        window.Closing += (s, e) => SaveWindowState(window, windowId);
+    }
+    
+    private void SaveWindowState(Window window, string windowId)
+    {
+        var states = LoadStates();
+        
+        states[windowId] = new WindowState
+        {
+            Left = window.RestoreBounds.Left,
+            Top = window.RestoreBounds.Top,
+            Width = window.RestoreBounds.Width,
+            Height = window.RestoreBounds.Height,
+            IsMaximized = window.WindowState == System.Windows.WindowState.Maximized
+        };
+        
+        SaveStates(states);
+    }
+    
+    private void RestoreWindowState(Window window, string windowId)
+    {
+        var states = LoadStates();
+        
+        if (states.TryGetValue(windowId, out var state))
+        {
+            // 화면 범위 확인
+            var screen = GetScreenFromPoint(new Point(state.Left, state.Top));
+            if (screen != null)
+            {
+                window.Left = state.Left;
+                window.Top = state.Top;
+                window.Width = state.Width;
+                window.Height = state.Height;
+                
+                if (state.IsMaximized)
+                {
+                    window.WindowState = System.Windows.WindowState.Maximized;
+                }
+            }
+        }
+    }
+    
+    private Dictionary<string, WindowState> LoadStates()
+    {
+        if (File.Exists(_settingsPath))
+        {
+            var json = File.ReadAllText(_settingsPath);
+            return JsonSerializer.Deserialize<Dictionary<string, WindowState>>(json) 
+                   ?? new Dictionary<string, WindowState>();
+        }
+        
+        return new Dictionary<string, WindowState>();
+    }
+    
+    private void SaveStates(Dictionary<string, WindowState> states)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath));
+        var json = JsonSerializer.Serialize(states);
+        File.WriteAllText(_settingsPath, json);
+    }
+    
+    private Screen GetScreenFromPoint(Point point)
+    {
+        return Screen.AllScreens.FirstOrDefault(s => s.WorkingArea.Contains(
+            new System.Drawing.Point((int)point.X, (int)point.Y)));
+    }
+    
+    private class WindowState
+    {
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public bool IsMaximized { get; set; }
+    }
+}
+```
+
+## 작업 표시줄 아이콘
+
+### 작업 표시줄 사용자 정의
+```csharp
+public class TaskbarManager
+{
+    private readonly Window _window;
+    private TaskbarItemInfo _taskbarInfo;
+    
+    public TaskbarManager(Window window)
+    {
+        _window = window;
+        _taskbarInfo = new TaskbarItemInfo();
+        _window.TaskbarItemInfo = _taskbarInfo;
+    }
+    
+    public void SetProgress(double value, TaskbarItemProgressState state = TaskbarItemProgressState.Normal)
+    {
+        _taskbarInfo.ProgressValue = value;
+        _taskbarInfo.ProgressState = state;
+    }
+    
+    public void SetBadge(string text)
+    {
+        // Windows 10 배지 기능
+        var badgeUpdater = BadgeUpdateManager.CreateBadgeUpdaterForApplication();
+        var badgeXml = BadgeUpdateManager.GetTemplateContent(BadgeTemplateType.BadgeNumber);
+        var badgeElement = badgeXml.SelectSingleNode("/badge") as XmlElement;
+        badgeElement.SetAttribute("value", text);
+        
+        var notification = new BadgeNotification(badgeXml);
+        badgeUpdater.Update(notification);
+    }
+    
+    public void AddThumbButton(string description, ImageSource icon, Action clickAction)
+    {
+        var button = new ThumbButtonInfo
+        {
+            Description = description,
+            ImageSource = icon,
+            Command = new RelayCommand(_ => clickAction())
+        };
+        
+        _taskbarInfo.ThumbButtonInfos.Add(button);
+    }
+    
+    public void FlashWindow()
+    {
+        var helper = new WindowInteropHelper(_window);
+        FlashWindow(helper.Handle, true);
+    }
+    
+    [DllImport("user32.dll")]
+    private static extern bool FlashWindow(IntPtr hwnd, bool bInvert);
+}
+```
+
+## 전역 핫키
+
+### 전역 핫키 등록
+```csharp
+public class GlobalHotkeyManager : IDisposable
+{
+    private readonly Window _window;
+    private readonly Dictionary<int, Action> _hotkeys = new Dictionary<int, Action>();
+    private HwndSource _source;
+    private int _currentId = 1;
+    
+    public GlobalHotkeyManager(Window window)
+    {
+        _window = window;
+        _window.SourceInitialized += OnSourceInitialized;
+    }
+    
+    private void OnSourceInitialized(object sender, EventArgs e)
+    {
+        var helper = new WindowInteropHelper(_window);
+        _source = HwndSource.FromHwnd(helper.Handle);
+        _source.AddHook(HwndHook);
+    }
+    
+    public void RegisterHotkey(ModifierKeys modifiers, Key key, Action action)
+    {
+        var virtualKey = KeyInterop.VirtualKeyFromKey(key);
+        var modifierFlags = 0;
+        
+        if (modifiers.HasFlag(ModifierKeys.Alt)) modifierFlags |= 0x0001;
+        if (modifiers.HasFlag(ModifierKeys.Control)) modifierFlags |= 0x0002;
+        if (modifiers.HasFlag(ModifierKeys.Shift)) modifierFlags |= 0x0004;
+        if (modifiers.HasFlag(ModifierKeys.Windows)) modifierFlags |= 0x0008;
+        
+        if (RegisterHotKey(_source.Handle, _currentId, modifierFlags, virtualKey))
+        {
+            _hotkeys[_currentId] = action;
+            _currentId++;
+        }
+    }
+    
+    private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        const int WM_HOTKEY = 0x0312;
+        
+        if (msg == WM_HOTKEY)
+        {
+            var hotkeyId = wParam.ToInt32();
+            if (_hotkeys.TryGetValue(hotkeyId, out var action))
+            {
+                action();
+                handled = true;
+            }
+        }
+        
+        return IntPtr.Zero;
+    }
+    
+    public void Dispose()
+    {
+        foreach (var hotkeyId in _hotkeys.Keys)
+        {
+            UnregisterHotKey(_source.Handle, hotkeyId);
+        }
+        
+        _source?.RemoveHook(HwndHook);
+    }
+    
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+    
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+}
+```
+
+## 실전 예제: 도킹 가능한 창 시스템
+
+```csharp
+public interface IDockableWindow
+{
+    string Title { get; }
+    bool CanClose { get; }
+    DockPosition DefaultPosition { get; }
+}
+
+public enum DockPosition
+{
+    Left, Right, Top, Bottom, Center, Floating
+}
+
+public class DockingWindowManager
+{
+    private readonly Grid _dockContainer;
+    private readonly Dictionary<IDockableWindow, DockingWindow> _windows = 
+        new Dictionary<IDockableWindow, DockingWindow>();
+    
+    public DockingWindowManager(Grid dockContainer)
+    {
+        _dockContainer = dockContainer;
+        InitializeDockLayout();
+    }
+    
+    private void InitializeDockLayout()
+    {
+        // 5x5 그리드 생성 (Left, Center, Right / Top, Center, Bottom)
+        for (int i = 0; i < 3; i++)
+        {
+            _dockContainer.ColumnDefinitions.Add(new ColumnDefinition 
+            { 
+                Width = i == 1 ? new GridLength(1, GridUnitType.Star) : GridLength.Auto 
+            });
+            _dockContainer.RowDefinitions.Add(new RowDefinition 
+            { 
+                Height = i == 1 ? new GridLength(1, GridUnitType.Star) : GridLength.Auto 
+            });
+        }
+        
+        // 스플리터 추가
+        AddSplitters();
+    }
+    
+    private void AddSplitters()
+    {
+        // 수직 스플리터
+        var leftSplitter = new GridSplitter 
+        { 
+            Width = 5, 
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Stretch,
+            Background = Brushes.LightGray
+        };
+        Grid.SetColumn(leftSplitter, 0);
+        Grid.SetRow(leftSplitter, 1);
+        _dockContainer.Children.Add(leftSplitter);
+        
+        // 수평 스플리터
+        var topSplitter = new GridSplitter 
+        { 
+            Height = 5, 
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Background = Brushes.LightGray
+        };
+        Grid.SetColumn(topSplitter, 1);
+        Grid.SetRow(topSplitter, 0);
+        _dockContainer.Children.Add(topSplitter);
+    }
+    
+    public void DockWindow(IDockableWindow window, DockPosition position)
+    {
+        var dockingWindow = new DockingWindow(window);
+        _windows[window] = dockingWindow;
+        
+        switch (position)
+        {
+            case DockPosition.Left:
+                Grid.SetColumn(dockingWindow, 0);
+                Grid.SetRow(dockingWindow, 1);
+                break;
+            case DockPosition.Right:
+                Grid.SetColumn(dockingWindow, 2);
+                Grid.SetRow(dockingWindow, 1);
+                break;
+            case DockPosition.Top:
+                Grid.SetColumn(dockingWindow, 1);
+                Grid.SetRow(dockingWindow, 0);
+                break;
+            case DockPosition.Bottom:
+                Grid.SetColumn(dockingWindow, 1);
+                Grid.SetRow(dockingWindow, 2);
+                break;
+            case DockPosition.Center:
+                Grid.SetColumn(dockingWindow, 1);
+                Grid.SetRow(dockingWindow, 1);
+                break;
+            case DockPosition.Floating:
+                FloatWindow(window);
+                return;
+        }
+        
+        _dockContainer.Children.Add(dockingWindow);
+    }
+    
+    private void FloatWindow(IDockableWindow window)
+    {
+        var floatingWindow = new Window
+        {
+            Title = window.Title,
+            Content = window,
+            Width = 400,
+            Height = 300,
+            Owner = Application.Current.MainWindow
+        };
+        
+        floatingWindow.Show();
+    }
+}
+
+public class DockingWindow : UserControl
+{
+    public DockingWindow(IDockableWindow content)
+    {
+        var grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        
+        // 헤더
+        var header = new Border
+        {
+            Background = Brushes.LightGray,
+            Padding = new Thickness(5)
+        };
+        
+        var headerContent = new DockPanel();
+        var title = new TextBlock { Text = content.Title, FontWeight = FontWeights.Bold };
+        DockPanel.SetDock(title, Dock.Left);
+        headerContent.Children.Add(title);
+        
+        if (content.CanClose)
+        {
+            var closeButton = new Button { Content = "X", Width = 20, Height = 20 };
+            DockPanel.SetDock(closeButton, Dock.Right);
+            headerContent.Children.Add(closeButton);
+        }
+        
+        header.Child = headerContent;
+        Grid.SetRow(header, 0);
+        grid.Children.Add(header);
+        
+        // 콘텐츠
+        var contentPresenter = new ContentPresenter { Content = content };
+        Grid.SetRow(contentPresenter, 1);
+        grid.Children.Add(contentPresenter);
+        
+        Content = grid;
+    }
+}
+```
+
 ## 핵심 개념 정리
 - **Window**: WPF 애플리케이션의 최상위 UI 컨테이너
 - **Window 라이프사이클**: 창의 생성부터 소멸까지 이벤트
@@ -1036,3 +1653,8 @@ public abstract class TabItemViewModel : ViewModelBase
 - **스플래시 스크린**: 애플리케이션 시작 화면
 - **내비게이션 서비스**: MVVM 패턴에서의 내비게이션
 - **MDI**: 다중 문서 인터페이스 구현
+- **Window 간 통신**: Messenger 패턴을 통한 창 간 메시지 전달
+- **창 애니메이션**: 페이드인/아웃, 슬라이드 효과
+- **작업 표시줄**: 진행 표시, 배지, 썸 버튼
+- **전역 핫키**: 시스템 전체 키보드 단축키
+- **도킹 시스템**: Visual Studio 스타일의 창 배치
