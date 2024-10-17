@@ -1187,3 +1187,5 @@ public partial class DocumentEditor : Window
 - **PDF 생성**: iTextSharp를 통한 PDF 생성
 - **드래그 앤 드롭**: 파일 드롭 처리
 - **문서 편집기**: RichTextBox 기반 편집기 구현
+- **인쇄 미리보기**: DocumentViewer를 통한 미리보기
+- **비동기 파일 처리**: async/await를 활용한 파일 I/O
