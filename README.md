@@ -46,6 +46,7 @@
 - [15. 내비게이션과 창](WPF/15-navigation-and-windows.md)
 - [16. 성능 최적화](WPF/16-performance-optimization.md)
 - [17. 파일과 인쇄](WPF/17-file-and-printing.md)
+- [18. 국제화](WPF/18-internationalization.md)
 
 ### 🌐 Blazor
 *Coming soon...*
