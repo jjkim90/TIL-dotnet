@@ -47,6 +47,7 @@
 - [16. 성능 최적화](WPF/16-performance-optimization.md)
 - [17. 파일과 인쇄](WPF/17-file-and-printing.md)
 - [18. 국제화](WPF/18-internationalization.md)
+- [19. 최신 WPF 기능](WPF/19-modern-wpf-features.md)
 
 ### 🌐 Blazor
 *Coming soon...*
