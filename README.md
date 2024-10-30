@@ -49,6 +49,10 @@
 - [18. 국제화](WPF/18-internationalization.md)
 - [19. 최신 WPF 기능](WPF/19-modern-wpf-features.md)
 
+### 🌐 ASP.NET Core
+- [01. ASP.NET Core 소개와 프로젝트 구조](ASP.NET-Core/01-introduction-and-project-structure.md)
+- [02. 라우팅과 미들웨어 파이프라인](ASP.NET-Core/02-routing-and-middleware-pipeline.md)
+
 ### 🌐 Blazor
 *Coming soon...*
 
