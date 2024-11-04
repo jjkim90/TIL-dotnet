@@ -53,6 +53,7 @@
 - [01. ASP.NET Core 소개와 프로젝트 구조](ASP.NET-Core/01-introduction-and-project-structure.md)
 - [02. 라우팅과 미들웨어 파이프라인](ASP.NET-Core/02-routing-and-middleware-pipeline.md)
 - [03. 의존성 주입 (DI Container)](ASP.NET-Core/03-dependency-injection.md)
+- [04. 구성(Configuration)과 환경 설정](ASP.NET-Core/04-configuration-and-environments.md)
 
 ### 🌐 Blazor
 *Coming soon...*
