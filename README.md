@@ -54,6 +54,7 @@
 - [02. 라우팅과 미들웨어 파이프라인](ASP.NET-Core/02-routing-and-middleware-pipeline.md)
 - [03. 의존성 주입 (DI Container)](ASP.NET-Core/03-dependency-injection.md)
 - [04. 구성(Configuration)과 환경 설정](ASP.NET-Core/04-configuration-and-environments.md)
+- [05. 로깅과 예외 처리](ASP.NET-Core/05-logging-and-exception-handling.md)
 
 ### 🌐 Blazor
 *Coming soon...*
