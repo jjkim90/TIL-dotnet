@@ -56,6 +56,7 @@
 - [04. 구성(Configuration)과 환경 설정](ASP.NET-Core/04-configuration-and-environments.md)
 - [05. 로깅과 예외 처리](ASP.NET-Core/05-logging-and-exception-handling.md)
 - [06. RESTful API 설계와 컨트롤러](ASP.NET-Core/06-restful-api-design-and-controllers.md)
+- [07. 모델 바인딩과 검증](ASP.NET-Core/07-model-binding-and-validation.md)
 
 ### 🌐 Blazor
 *Coming soon...*
