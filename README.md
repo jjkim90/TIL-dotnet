@@ -58,6 +58,7 @@
 - [06. RESTful API 설계와 컨트롤러](ASP.NET-Core/06-restful-api-design-and-controllers.md)
 - [07. 모델 바인딩과 검증](ASP.NET-Core/07-model-binding-and-validation.md)
 - [08. 응답 포맷팅과 콘텐츠 협상](ASP.NET-Core/08-response-formatting-and-content-negotiation.md)
+- [09. API 버저닝과 문서화 (Swagger)](ASP.NET-Core/09-api-versioning-and-documentation.md)
 
 ### 🌐 Blazor
 *Coming soon...*
