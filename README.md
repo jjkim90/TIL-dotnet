@@ -59,6 +59,8 @@
 - [07. 모델 바인딩과 검증](ASP.NET-Core/07-model-binding-and-validation.md)
 - [08. 응답 포맷팅과 콘텐츠 협상](ASP.NET-Core/08-response-formatting-and-content-negotiation.md)
 - [09. API 버저닝과 문서화 (Swagger)](ASP.NET-Core/09-api-versioning-and-documentation.md)
+- [10. Entity Framework Core와 데이터 액세스](ASP.NET-Core/10-entity-framework-core-and-data-access.md)
+- [11. Repository 패턴과 Unit of Work](ASP.NET-Core/11-repository-pattern-and-unit-of-work.md)
 
 ### 🌐 Blazor
 *Coming soon...*
