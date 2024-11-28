@@ -61,6 +61,7 @@
 - [09. API 버저닝과 문서화 (Swagger)](ASP.NET-Core/09-api-versioning-and-documentation.md)
 - [10. Entity Framework Core와 데이터 액세스](ASP.NET-Core/10-entity-framework-core-and-data-access.md)
 - [11. Repository 패턴과 Unit of Work](ASP.NET-Core/11-repository-pattern-and-unit-of-work.md)
+- [12. 고급 EF Core와 성능 최적화](ASP.NET-Core/12-advanced-ef-core-performance.md)
 
 ### 🌐 Blazor
 *Coming soon...*
