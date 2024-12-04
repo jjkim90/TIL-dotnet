@@ -63,6 +63,7 @@
 - [11. Repository 패턴과 Unit of Work](ASP.NET-Core/11-repository-pattern-and-unit-of-work.md)
 - [12. 고급 EF Core와 성능 최적화](ASP.NET-Core/12-advanced-ef-core-performance.md)
 - [13. 인증 (Authentication) - JWT, Cookie, Identity](ASP.NET-Core/13-authentication-jwt-cookie-identity.md)
+- [14. 권한 부여 (Authorization) - Policy, Role, Claims](ASP.NET-Core/14-authorization-policy-role-claims.md)
 
 ### 🌐 Blazor
 *Coming soon...*
