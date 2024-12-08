@@ -65,6 +65,7 @@
 - [13. 인증 (Authentication) - JWT, Cookie, Identity](ASP.NET-Core/13-authentication-jwt-cookie-identity.md)
 - [14. 권한 부여 (Authorization) - Policy, Role, Claims](ASP.NET-Core/14-authorization-policy-role-claims.md)
 - [15. API 보안 - CORS, HTTPS, Security Headers](ASP.NET-Core/15-api-security-cors-https-headers.md)
+- [16. 캐싱 전략 - In-Memory, Distributed, Response](ASP.NET-Core/16-caching-strategies.md)
 
 ### 🌐 Blazor
 *Coming soon...*
