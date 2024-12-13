@@ -68,6 +68,7 @@
 - [16. 캐싱 전략 - In-Memory, Distributed, Response](ASP.NET-Core/16-caching-strategies.md)
 - [17. 백그라운드 작업 - Hosted Services, Queues](ASP.NET-Core/17-background-tasks-hosted-services.md)
 - [18. 실시간 통신 - SignalR](ASP.NET-Core/18-realtime-communication-signalr.md)
+- [19. 파일 업로드와 스트리밍](ASP.NET-Core/19-file-upload-and-streaming.md)
 
 ### 🌐 Blazor
 *Coming soon...*
