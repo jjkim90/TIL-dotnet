@@ -71,6 +71,7 @@
 - [19. 파일 업로드와 스트리밍](ASP.NET-Core/19-file-upload-and-streaming.md)
 - [20. Health Checks와 모니터링](ASP.NET-Core/20-health-checks-and-monitoring.md)
 - [21. Testing - xUnit and Moq](ASP.NET-Core/21-testing-xunit-and-moq.md)
+- [22. Integration Testing](ASP.NET-Core/22-integration-testing.md)
 
 ### 🌐 Blazor
 *Coming soon...*
