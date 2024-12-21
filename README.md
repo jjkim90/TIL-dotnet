@@ -72,6 +72,7 @@
 - [20. Health Checks와 모니터링](ASP.NET-Core/20-health-checks-and-monitoring.md)
 - [21. Testing - xUnit and Moq](ASP.NET-Core/21-testing-xunit-and-moq.md)
 - [22. Integration Testing](ASP.NET-Core/22-integration-testing.md)
+- [23. Minimal APIs](ASP.NET-Core/23-minimal-apis.md)
 
 ### 🌐 Blazor
 *Coming soon...*
