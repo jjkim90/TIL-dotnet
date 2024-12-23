@@ -73,6 +73,7 @@
 - [21. Testing - xUnit and Moq](ASP.NET-Core/21-testing-xunit-and-moq.md)
 - [22. Integration Testing](ASP.NET-Core/22-integration-testing.md)
 - [23. Minimal APIs](ASP.NET-Core/23-minimal-apis.md)
+- [24. gRPC Services](ASP.NET-Core/24-grpc-services.md)
 
 ### 🌐 Blazor
 *Coming soon...*
