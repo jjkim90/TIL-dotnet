@@ -75,6 +75,7 @@
 - [23. Minimal APIs](ASP.NET-Core/23-minimal-apis.md)
 - [24. gRPC Services](ASP.NET-Core/24-grpc-services.md)
 - [25. GraphQL과 Hot Chocolate](ASP.NET-Core/25-graphql-with-hot-chocolate.md)
+- [26. Blazor Server](ASP.NET-Core/26-blazor-server.md)
 
 ### 🌐 Blazor
 *Coming soon...*
