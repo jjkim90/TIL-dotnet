@@ -76,6 +76,7 @@
 - [24. gRPC Services](ASP.NET-Core/24-grpc-services.md)
 - [25. GraphQL과 Hot Chocolate](ASP.NET-Core/25-graphql-with-hot-chocolate.md)
 - [26. Blazor Server](ASP.NET-Core/26-blazor-server.md)
+- [27. Blazor WebAssembly](ASP.NET-Core/27-blazor-webassembly.md)
 
 ### 🌐 Blazor
 *Coming soon...*
