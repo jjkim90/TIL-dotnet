@@ -77,6 +77,7 @@
 - [25. GraphQL과 Hot Chocolate](ASP.NET-Core/25-graphql-with-hot-chocolate.md)
 - [26. Blazor Server](ASP.NET-Core/26-blazor-server.md)
 - [27. Blazor WebAssembly](ASP.NET-Core/27-blazor-webassembly.md)
+- [28. Clean Architecture](ASP.NET-Core/28-clean-architecture.md)
 
 ### 🌐 Blazor
 *Coming soon...*
