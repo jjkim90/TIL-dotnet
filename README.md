@@ -78,6 +78,7 @@
 - [26. Blazor Server](ASP.NET-Core/26-blazor-server.md)
 - [27. Blazor WebAssembly](ASP.NET-Core/27-blazor-webassembly.md)
 - [28. Clean Architecture](ASP.NET-Core/28-clean-architecture.md)
+- [29. Domain-Driven Design (DDD)](ASP.NET-Core/29-domain-driven-design.md)
 
 ### 🌐 Blazor
 *Coming soon...*
