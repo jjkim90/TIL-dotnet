@@ -80,6 +80,7 @@
 - [28. Clean Architecture](ASP.NET-Core/28-clean-architecture.md)
 - [29. Domain-Driven Design (DDD)](ASP.NET-Core/29-domain-driven-design.md)
 - [30. CQRS와 MediatR](ASP.NET-Core/30-cqrs-and-mediatr.md)
+- [31. Event Sourcing](ASP.NET-Core/31-event-sourcing.md)
 
 ### 🌐 Blazor
 *Coming soon...*
