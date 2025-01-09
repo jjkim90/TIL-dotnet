@@ -81,6 +81,7 @@
 - [29. Domain-Driven Design (DDD)](ASP.NET-Core/29-domain-driven-design.md)
 - [30. CQRS와 MediatR](ASP.NET-Core/30-cqrs-and-mediatr.md)
 - [31. Event Sourcing](ASP.NET-Core/31-event-sourcing.md)
+- [32. Microservices Patterns](ASP.NET-Core/32-microservices-patterns.md)
 
 ### 🌐 Blazor
 *Coming soon...*
