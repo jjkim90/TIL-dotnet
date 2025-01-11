@@ -82,6 +82,7 @@
 - [30. CQRS와 MediatR](ASP.NET-Core/30-cqrs-and-mediatr.md)
 - [31. Event Sourcing](ASP.NET-Core/31-event-sourcing.md)
 - [32. Microservices Patterns](ASP.NET-Core/32-microservices-patterns.md)
+- [33. API Gateway - Ocelot](ASP.NET-Core/33-api-gateway-ocelot.md)
 
 ### 🌐 Blazor
 *Coming soon...*
