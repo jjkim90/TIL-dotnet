@@ -84,6 +84,7 @@
 - [32. Microservices Patterns](ASP.NET-Core/32-microservices-patterns.md)
 - [33. API Gateway - Ocelot](ASP.NET-Core/33-api-gateway-ocelot.md)
 - [34. Service Discovery - Consul](ASP.NET-Core/34-service-discovery-consul.md)
+- [35. Distributed Tracing](ASP.NET-Core/35-distributed-tracing.md)
 
 ### 🌐 Blazor
 *Coming soon...*
