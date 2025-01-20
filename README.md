@@ -86,6 +86,7 @@
 - [34. Service Discovery - Consul](ASP.NET-Core/34-service-discovery-consul.md)
 - [35. Distributed Tracing](ASP.NET-Core/35-distributed-tracing.md)
 - [36. Performance Optimization](ASP.NET-Core/36-performance-optimization.md)
+- [37. Memory Management](ASP.NET-Core/37-memory-management.md)
 
 ### 🌐 Blazor
 *Coming soon...*
