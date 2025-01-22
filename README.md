@@ -87,6 +87,7 @@
 - [35. Distributed Tracing](ASP.NET-Core/35-distributed-tracing.md)
 - [36. Performance Optimization](ASP.NET-Core/36-performance-optimization.md)
 - [37. Memory Management](ASP.NET-Core/37-memory-management.md)
+- [38. Deployment - Docker](ASP.NET-Core/38-deployment-docker.md)
 
 ### 🌐 Blazor
 *Coming soon...*
