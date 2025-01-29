@@ -92,7 +92,7 @@
 - [40. CI/CD Pipelines](ASP.NET-Core/40-cicd-pipelines.md)
 
 ### 🌐 Blazor
-*Coming soon...*
+- [01. Blazor 아키텍처 심화](Blazor/01-blazor-architecture-deep-dive.md)
 
 ### 💻 Computer Science
 *Coming soon...*
