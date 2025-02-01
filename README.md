@@ -93,6 +93,7 @@
 
 ### 🌐 Blazor
 - [01. Blazor 아키텍처 심화](Blazor/01-blazor-architecture-deep-dive.md)
+- [02. 컴포넌트 생명주기와 렌더링 최적화](Blazor/02-component-lifecycle-and-rendering-optimization.md)
 
 ### 💻 Computer Science
 *Coming soon...*
