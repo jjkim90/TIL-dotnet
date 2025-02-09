@@ -96,6 +96,7 @@
 - [02. 컴포넌트 생명주기와 렌더링 최적화](Blazor/02-component-lifecycle-and-rendering-optimization.md)
 - [03. 고급 컴포넌트 패턴](Blazor/03-advanced-component-patterns.md)
 - [04. 파라미터와 캐스케이딩 값](Blazor/04-parameters-and-cascading-values.md)
+- [05. 이벤트 처리와 EventCallback](Blazor/05-event-handling-and-eventcallback.md)
 
 ### 💻 Computer Science
 *Coming soon...*
