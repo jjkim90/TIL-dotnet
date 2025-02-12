@@ -97,6 +97,8 @@
 - [03. 고급 컴포넌트 패턴](Blazor/03-advanced-component-patterns.md)
 - [04. 파라미터와 캐스케이딩 값](Blazor/04-parameters-and-cascading-values.md)
 - [05. 이벤트 처리와 EventCallback](Blazor/05-event-handling-and-eventcallback.md)
+- [06. 상태 관리 패턴](Blazor/06-state-management-patterns.md)
+- [07. 폼과 검증 심화](Blazor/07-forms-and-validation-advanced.md)
 
 ### 💻 Computer Science
 *Coming soon...*
