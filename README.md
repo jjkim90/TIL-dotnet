@@ -99,6 +99,7 @@
 - [05. 이벤트 처리와 EventCallback](Blazor/05-event-handling-and-eventcallback.md)
 - [06. 상태 관리 패턴](Blazor/06-state-management-patterns.md)
 - [07. 폼과 검증 심화](Blazor/07-forms-and-validation-advanced.md)
+- [08. 데이터 바인딩 고급](Blazor/08-data-binding-advanced.md)
 
 ### 💻 Computer Science
 *Coming soon...*
