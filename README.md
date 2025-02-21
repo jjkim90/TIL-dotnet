@@ -101,6 +101,7 @@
 - [07. 폼과 검증 심화](Blazor/07-forms-and-validation-advanced.md)
 - [08. 데이터 바인딩 고급](Blazor/08-data-binding-advanced.md)
 - [09. 실시간 데이터 동기화](Blazor/09-realtime-data-synchronization.md)
+- [10. 가상화와 대용량 데이터](Blazor/10-virtualization-and-large-data.md)
 
 ### 💻 Computer Science
 *Coming soon...*
