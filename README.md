@@ -104,6 +104,7 @@
 - [10. 가상화와 대용량 데이터](Blazor/10-virtualization-and-large-data.md)
 - [11. JavaScript Interop 고급](Blazor/11-javascript-interop-advanced.md)
 - [12. JavaScript 라이브러리 통합](Blazor/12-javascript-library-integration.md)
+- [13. Web API 통합](Blazor/13-web-api-integration.md)
 
 ### 💻 Computer Science
 *Coming soon...*
