@@ -105,6 +105,7 @@
 - [11. JavaScript Interop 고급](Blazor/11-javascript-interop-advanced.md)
 - [12. JavaScript 라이브러리 통합](Blazor/12-javascript-library-integration.md)
 - [13. Web API 통합](Blazor/13-web-api-integration.md)
+- [14. 인증과 권한 부여 고급](Blazor/14-authentication-and-authorization-advanced.md)
 
 ### 💻 Computer Science
 *Coming soon...*
