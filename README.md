@@ -106,6 +106,7 @@
 - [12. JavaScript 라이브러리 통합](Blazor/12-javascript-library-integration.md)
 - [13. Web API 통합](Blazor/13-web-api-integration.md)
 - [14. 인증과 권한 부여 고급](Blazor/14-authentication-and-authorization-advanced.md)
+- [15. 보안 모범 사례](Blazor/15-security-best-practices.md)
 
 ### 💻 Computer Science
 *Coming soon...*
