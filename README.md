@@ -107,6 +107,7 @@
 - [13. Web API 통합](Blazor/13-web-api-integration.md)
 - [14. 인증과 권한 부여 고급](Blazor/14-authentication-and-authorization-advanced.md)
 - [15. 보안 모범 사례](Blazor/15-security-best-practices.md)
+- [16. 성능 최적화 전략](Blazor/16-performance-optimization-strategies.md)
 
 ### 💻 Computer Science
 *Coming soon...*
