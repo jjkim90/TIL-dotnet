@@ -108,6 +108,7 @@
 - [14. 인증과 권한 부여 고급](Blazor/14-authentication-and-authorization-advanced.md)
 - [15. 보안 모범 사례](Blazor/15-security-best-practices.md)
 - [16. 성능 최적화 전략](Blazor/16-performance-optimization-strategies.md)
+- [17. 메모리 관리와 디버깅](Blazor/17-memory-management-and-debugging.md)
 
 ### 💻 Computer Science
 *Coming soon...*
