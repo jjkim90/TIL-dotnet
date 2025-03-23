@@ -111,6 +111,7 @@
 - [17. 메모리 관리와 디버깅](Blazor/17-memory-management-and-debugging.md)
 - [18. PWA와 오프라인 지원](Blazor/18-pwa-and-offline-support.md)
 - [19. 테스트 전략](Blazor/19-testing-strategies.md)
+- [20. 엔터프라이즈 패턴](Blazor/20-enterprise-patterns.md)
 
 ### 💻 Computer Science
 *Coming soon...*
