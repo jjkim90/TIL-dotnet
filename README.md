@@ -120,7 +120,7 @@
 *Coming soon...*
 
 ### 🗄️ Database
-*Coming soon...*
+- [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
 
 ### 🔧 DevOps
 *Coming soon...*
