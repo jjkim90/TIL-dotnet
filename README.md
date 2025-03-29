@@ -121,6 +121,7 @@
 
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
+- [02. SQL 기초 - DDL과 기본 DML](Database/02-sql-basics-ddl-and-dml.md)
 
 ### 🔧 DevOps
 *Coming soon...*
