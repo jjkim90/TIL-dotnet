@@ -123,6 +123,7 @@
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
 - [02. SQL 기초 - DDL과 기본 DML](Database/02-sql-basics-ddl-and-dml.md)
 - [03. SQL 중급 - 조인과 서브쿼리](Database/03-sql-intermediate-joins-and-subqueries.md)
+- [04. SQL 고급 - 윈도우 함수와 CTE](Database/04-sql-advanced-window-functions-and-cte.md)
 
 ### 🔧 DevOps
 *Coming soon...*
