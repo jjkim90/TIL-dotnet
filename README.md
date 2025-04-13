@@ -126,6 +126,7 @@
 - [04. SQL 고급 - 윈도우 함수와 CTE](Database/04-sql-advanced-window-functions-and-cte.md)
 - [05. 저장 프로시저와 함수](Database/05-stored-procedures-and-functions.md)
 - [06. 데이터베이스 설계 기초](Database/06-database-design-fundamentals.md)
+- [07. 인덱스 설계와 최적화](Database/07-index-design-and-optimization.md)
 
 ### 🔧 DevOps
 *Coming soon...*
