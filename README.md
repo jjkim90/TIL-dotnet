@@ -130,6 +130,7 @@
 - [08. 쿼리 최적화와 실행 계획](Database/08-query-optimization-and-execution-plans.md)
 - [09. 트랜잭션과 동시성 제어](Database/09-transactions-and-concurrency-control.md)
 - [10. 백업과 복구 전략](Database/10-backup-and-recovery-strategies.md)
+- [11. 데이터베이스 보안과 권한](Database/11-database-security-and-permissions.md)
 
 ### 🔧 DevOps
 *Coming soon...*
