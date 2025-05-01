@@ -132,6 +132,7 @@
 - [10. 백업과 복구 전략](Database/10-backup-and-recovery-strategies.md)
 - [11. 데이터베이스 보안과 권한](Database/11-database-security-and-permissions.md)
 - [12. 복제와 샤딩](Database/12-replication-and-sharding.md)
+- [13. NoSQL 데이터베이스 소개](Database/13-nosql-databases-introduction.md)
 
 ### 🔧 DevOps
 *Coming soon...*
