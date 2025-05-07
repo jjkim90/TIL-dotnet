@@ -134,6 +134,7 @@
 - [12. 복제와 샤딩](Database/12-replication-and-sharding.md)
 - [13. NoSQL 데이터베이스 소개](Database/13-nosql-databases-introduction.md)
 - [14. 데이터베이스 통합과 마이그레이션](Database/14-database-integration-and-migration.md)
+- [15. 데이터 웨어하우스와 데이터 레이크](Database/15-data-warehouse-and-data-lake.md)
 
 ### 🔧 DevOps
 *Coming soon...*
