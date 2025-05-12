@@ -136,6 +136,7 @@
 - [14. 데이터베이스 통합과 마이그레이션](Database/14-database-integration-and-migration.md)
 - [15. 데이터 웨어하우스와 데이터 레이크](Database/15-data-warehouse-and-data-lake.md)
 - [16. 클라우드 데이터베이스 서비스](Database/16-cloud-database-services.md)
+- [17. 실시간 데이터 처리](Database/17-real-time-data-processing.md)
 
 ### 🔧 DevOps
 *Coming soon...*
