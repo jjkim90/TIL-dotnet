@@ -137,6 +137,7 @@
 - [15. 데이터 웨어하우스와 데이터 레이크](Database/15-data-warehouse-and-data-lake.md)
 - [16. 클라우드 데이터베이스 서비스](Database/16-cloud-database-services.md)
 - [17. 실시간 데이터 처리](Database/17-real-time-data-processing.md)
+- [18. 데이터베이스 모니터링과 진단](Database/18-database-monitoring-and-diagnostics.md)
 
 ### 🔧 DevOps
 *Coming soon...*
