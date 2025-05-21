@@ -139,6 +139,7 @@
 - [17. 실시간 데이터 처리](Database/17-real-time-data-processing.md)
 - [18. 데이터베이스 모니터링과 진단](Database/18-database-monitoring-and-diagnostics.md)
 - [19. 고가용성과 재해 복구](Database/19-high-availability-and-disaster-recovery.md)
+- [20. 데이터베이스 자동화와 DevOps](Database/20-database-automation-and-devops.md)
 
 ### 🔧 DevOps
 *Coming soon...*
