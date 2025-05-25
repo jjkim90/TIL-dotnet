@@ -140,6 +140,7 @@
 - [18. 데이터베이스 모니터링과 진단](Database/18-database-monitoring-and-diagnostics.md)
 - [19. 고가용성과 재해 복구](Database/19-high-availability-and-disaster-recovery.md)
 - [20. 데이터베이스 자동화와 DevOps](Database/20-database-automation-and-devops.md)
+- [21. 빅데이터와 분석 데이터베이스](Database/21-big-data-and-analytics-databases.md)
 
 ### 🔧 DevOps
 *Coming soon...*
