@@ -141,6 +141,7 @@
 - [19. 고가용성과 재해 복구](Database/19-high-availability-and-disaster-recovery.md)
 - [20. 데이터베이스 자동화와 DevOps](Database/20-database-automation-and-devops.md)
 - [21. 빅데이터와 분석 데이터베이스](Database/21-big-data-and-analytics-databases.md)
+- [22. 그래프 데이터베이스와 지식 그래프](Database/22-graph-databases-and-knowledge-graphs.md)
 
 ### 🔧 DevOps
 *Coming soon...*
