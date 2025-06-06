@@ -144,6 +144,7 @@
 - [22. 그래프 데이터베이스와 지식 그래프](Database/22-graph-databases-and-knowledge-graphs.md)
 - [23. 시계열 데이터베이스와 IoT](Database/23-time-series-databases-and-iot.md)
 - [24. 데이터베이스와 머신러닝 통합](Database/24-database-machine-learning-integration.md)
+- [25. 클라우드 데이터베이스](Database/25-cloud-databases.md)
 
 ### 🔧 DevOps
 *Coming soon...*
