@@ -117,7 +117,7 @@
 *Coming soon...*
 
 ### 🏗️ Design Patterns
-*Coming soon...*
+- [01. 디자인 패턴 개요와 SOLID 원칙](DesignPatterns/01-design-patterns-overview.md)
 
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
