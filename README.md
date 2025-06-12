@@ -118,6 +118,7 @@
 
 ### 🏗️ Design Patterns
 - [01. 디자인 패턴 개요와 SOLID 원칙](DesignPatterns/01-design-patterns-overview.md)
+- [02. 객체지향 설계 원칙과 패턴 적용 전략](DesignPatterns/02-oop-design-principles.md)
 
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
