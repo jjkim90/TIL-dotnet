@@ -120,6 +120,7 @@
 - [01. 디자인 패턴 개요와 SOLID 원칙](DesignPatterns/01-design-patterns-overview.md)
 - [02. 객체지향 설계 원칙과 패턴 적용 전략](DesignPatterns/02-oop-design-principles.md)
 - [03. C#과 .NET의 패턴 지원 기능](DesignPatterns/03-csharp-pattern-features.md)
+- [04. Singleton 패턴과 의존성 주입](DesignPatterns/04-singleton-and-dependency-injection.md)
 
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
