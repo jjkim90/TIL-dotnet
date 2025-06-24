@@ -113,17 +113,6 @@
 - [19. 테스트 전략](Blazor/19-testing-strategies.md)
 - [20. 엔터프라이즈 패턴](Blazor/20-enterprise-patterns.md)
 
-### 💻 Computer Science
-*Coming soon...*
-
-### 🏗️ Design Patterns
-- [01. 디자인 패턴 개요와 SOLID 원칙](DesignPatterns/01-design-patterns-overview.md)
-- [02. 객체지향 설계 원칙과 패턴 적용 전략](DesignPatterns/02-oop-design-principles.md)
-- [03. C#과 .NET의 패턴 지원 기능](DesignPatterns/03-csharp-pattern-features.md)
-- [04. Singleton 패턴과 의존성 주입](DesignPatterns/04-singleton-and-dependency-injection.md)
-- [05. Factory Method와 Abstract Factory](DesignPatterns/05-factory-patterns.md)
-- [06. Builder 패턴과 Fluent API](DesignPatterns/06-builder-and-fluent-api.md)
-
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
 - [02. SQL 기초 - DDL과 기본 DML](Database/02-sql-basics-ddl-and-dml.md)
@@ -150,6 +139,17 @@
 - [23. 시계열 데이터베이스와 IoT](Database/23-time-series-databases-and-iot.md)
 - [24. 데이터베이스와 머신러닝 통합](Database/24-database-machine-learning-integration.md)
 - [25. 클라우드 데이터베이스](Database/25-cloud-databases.md)
+
+### 🏗️ Design Patterns
+- [01. 디자인 패턴 개요와 SOLID 원칙](DesignPatterns/01-design-patterns-overview.md)
+- [02. 객체지향 설계 원칙과 패턴 적용 전략](DesignPatterns/02-oop-design-principles.md)
+- [03. C#과 .NET의 패턴 지원 기능](DesignPatterns/03-csharp-pattern-features.md)
+- [04. Singleton 패턴과 의존성 주입](DesignPatterns/04-singleton-and-dependency-injection.md)
+- [05. Factory Method와 Abstract Factory](DesignPatterns/05-factory-patterns.md)
+- [06. Builder 패턴과 Fluent API](DesignPatterns/06-builder-and-fluent-api.md)
+
+### 💻 Computer Science
+*Coming soon...*
 
 ### 🔧 DevOps
 *Coming soon...*
