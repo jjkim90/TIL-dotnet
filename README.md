@@ -122,6 +122,7 @@
 - [03. C#과 .NET의 패턴 지원 기능](DesignPatterns/03-csharp-pattern-features.md)
 - [04. Singleton 패턴과 의존성 주입](DesignPatterns/04-singleton-and-dependency-injection.md)
 - [05. Factory Method와 Abstract Factory](DesignPatterns/05-factory-patterns.md)
+- [06. Builder 패턴과 Fluent API](DesignPatterns/06-builder-and-fluent-api.md)
 
 ### 🗄️ Database
 - [01. 데이터베이스 기초와 RDBMS 개념](Database/01-database-fundamentals-and-rdbms.md)
